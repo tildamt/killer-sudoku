@@ -1,0 +1,19 @@
+FIRST INTERIM REPORT 6.3.2022
+
+I have added the BigGrid- and SubArea-classes as well
+as some work for the ScalaFX. Now it contains the unfinished
+grid and candidate numbers. The sub-area now calculates all
+possible combinations and big grid has most of its basic functionality,
+although without the class square it isn't finished.
+
+I've tested the possibleCombinations-method in REPL and will add the
+unit testing this week, probably. I've also tested BigGrid's main functions
+with REPL.
+
+It was difficult to get the ScalaFX to work even with completely
+copying the information in the A+-material. My friend helped me with it. :-D
+
+I think the workload has already been around 10 to 15-ish hours, although I'm lagging
+in the schedule because most of the time is spent searching for tips on ScalaFX...
+It's hard to keep up with the schedule because all the other courses at the moment take a lot
+of time as well and their deadlines happen to be more or less weekly...
