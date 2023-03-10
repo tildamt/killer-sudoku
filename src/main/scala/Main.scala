@@ -66,6 +66,7 @@ object Main extends JFXApp3:
           var text = node.asInstanceOf[javafx.scene.control.Button].text.value
           for i <- bGrid.getChildren do
             if (i.layoutXProperty().value == lastPos(0)) && (i.layoutYProperty().value == lastPos(1)) then
+              i.asInstanceOf[javafx.scene.control.Label].alignment = scalafx.geometry.Pos.Center
               i.asInstanceOf[javafx.scene.control.Label].text = node.asInstanceOf[javafx.scene.control.Button].text.toString.drop(node.asInstanceOf[javafx.scene.control.Button].text.toString.length-2).dropRight(1)
               println(node.asInstanceOf[javafx.scene.control.Button].text.toString.drop(node.asInstanceOf[javafx.scene.control.Button].text.toString.length-2).dropRight(1))
           //println(s"Text after: ${node.asInstanceOf[scalafx.scene.control.Label].text.value}")
