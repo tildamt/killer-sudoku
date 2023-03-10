@@ -17,9 +17,13 @@ import scalafx.scene.image.Image
 import scalafx.scene.layout.BorderPane
 import scalafx.scene.layout.FlowPane
 import scalafx.scene.layout.HBox
+import scalafx.scene.input.MouseEvent
+import scalafx.scene.control._
 
 
 object Main extends JFXApp3:
+
+  var lastPos = Vector[Double]()
 
   def start(): Unit =
     val pane = new GridPane()
@@ -30,10 +34,18 @@ object Main extends JFXApp3:
       val square = new Label("")
       square.setMinWidth(50)
       square.setMinHeight(50)
-      square.text <== when (square.hover) choose "1\n   2" otherwise ""
+      //square.text <== when (square.hover) choose "1\n   2" otherwise ""
       square.style <== when (square.hover) choose "-fx-border-color: black; -fx-background-color: #00ff00;" otherwise "-fx-border-color: black; -fx-background-color: #ffff00; "
       square.font = Font.font(15)
       bGrid.add(square, j, i)
+
+    for (node <- bGrid.children) do
+      node.onMouseClicked = (e: MouseEvent) =>
+        lastPos = Vector(node.layoutXProperty().value, node.layoutYProperty().value)
+        //node.asInstanceOf[Label].text = "New"
+        println(lastPos)
+        //(node.layoutXProperty().value, node.layoutYProperty().value)
+    //println(lastPos)
 
     val hbox = new HBox()
     hbox.setPadding(Insets(15, 12, 15, 12))
@@ -41,7 +53,7 @@ object Main extends JFXApp3:
 
     var number = 1
     while number <= 9 do
-      var num = new Button(s"$number")
+      var num = new scalafx.scene.control.Button(s"$number")
       num.setMinHeight(40)
       num.setMinWidth(40)
       num.font = Font.font(20)
@@ -49,15 +61,33 @@ object Main extends JFXApp3:
       hbox.getChildren.addAll(num)
       number = number + 1
 
+    for node <- hbox.getChildren do
+      node.onMouseClicked = (e: MouseEvent) =>
+        if lastPos.nonEmpty then
+          println(s"Clicked on square at position $lastPos")
+          println(s"Text before: ${node.asInstanceOf[scalafx.scene.control.Label].text.value}")
+          var text = node.asInstanceOf[scalafx.scene.control.Button].text.value
+          for i <- bGrid.getChildren do
+            if (i.layoutXProperty().value == lastPos(0)) && (i.layoutYProperty().value == lastPos(1)) then
+              i.asInstanceOf[scalafx.scene.control.Label].text = "1"
+          println(s"Text after: ${node.asInstanceOf[scalafx.scene.control.Label].text.value}")
+
+      lastPos = Vector()
+
+
+    //hbox.getChildren.head.onMouseClicked = println("Click!")
+
+
+
+
+
     val borderPane = new BorderPane()
     borderPane.setCenter(bGrid)
     borderPane.setRight(new FlowPane())
     borderPane.setBottom(hbox)
 
     val scene = new Scene(borderPane, 600, 600)
-    scene.root = borderPane
 
-    //scene.root = bGrid
 
     stage = new JFXApp3.PrimaryStage
       stage.height = 600
