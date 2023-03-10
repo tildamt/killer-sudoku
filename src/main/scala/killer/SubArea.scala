@@ -1,3 +1,5 @@
+package killer
+
 import scala.collection.mutable.Buffer
 
 class SubArea(val summa: Int, squares: Buffer[Int]):

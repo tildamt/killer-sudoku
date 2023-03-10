@@ -1,3 +1,5 @@
+package killer
+
 import scala.collection.mutable.Buffer
 
 class BigGrid(rows: Int, cols: Int, squares: Array[Int]):
@@ -22,4 +24,4 @@ class BigGrid(rows: Int, cols: Int, squares: Array[Int]):
 
   // A method to check whether all instances of a number have been added to the grid.
   def everyInstanceDone(n: Int): Boolean =
-    grid.count(_.contains(Option(n))) == 9
+    grid.count( _.contains(Option(n))) == 9
