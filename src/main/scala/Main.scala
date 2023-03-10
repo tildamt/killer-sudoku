@@ -42,10 +42,7 @@ object Main extends JFXApp3:
     for (node <- bGrid.children) do
       node.onMouseClicked = (e: MouseEvent) =>
         lastPos = Vector(node.layoutXProperty().value, node.layoutYProperty().value)
-        //node.asInstanceOf[Label].text = "New"
         println(lastPos)
-        //(node.layoutXProperty().value, node.layoutYProperty().value)
-    //println(lastPos)
 
     val hbox = new HBox()
     hbox.setPadding(Insets(15, 12, 15, 12))
@@ -65,12 +62,13 @@ object Main extends JFXApp3:
       node.onMouseClicked = (e: MouseEvent) =>
         if lastPos.nonEmpty then
           println(s"Clicked on square at position $lastPos")
-          println(s"Text before: ${node.asInstanceOf[scalafx.scene.control.Label].text.value}")
-          var text = node.asInstanceOf[scalafx.scene.control.Button].text.value
+          //println(s"Text before: ${node.asInstanceOf[scalafx.scene.control.Label].text.value}")
+          var text = node.asInstanceOf[javafx.scene.control.Button].text.value
           for i <- bGrid.getChildren do
             if (i.layoutXProperty().value == lastPos(0)) && (i.layoutYProperty().value == lastPos(1)) then
-              i.asInstanceOf[scalafx.scene.control.Label].text = "1"
-          println(s"Text after: ${node.asInstanceOf[scalafx.scene.control.Label].text.value}")
+              i.asInstanceOf[javafx.scene.control.Label].text = node.asInstanceOf[javafx.scene.control.Button].text.toString.drop(node.asInstanceOf[javafx.scene.control.Button].text.toString.length-2).dropRight(1)
+              println(node.asInstanceOf[javafx.scene.control.Button].text.toString.drop(node.asInstanceOf[javafx.scene.control.Button].text.toString.length-2).dropRight(1))
+          //println(s"Text after: ${node.asInstanceOf[scalafx.scene.control.Label].text.value}")
 
       lastPos = Vector()
 
