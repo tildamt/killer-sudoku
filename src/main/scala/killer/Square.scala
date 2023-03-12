@@ -1,20 +1,34 @@
 package killer
 
+import killer.BigGrid
+
 class Square(row: Int, col: Int, subGrid: SubGrid, bigGrid: BigGrid):
 
   var number: Option[Int] = None
 
-  // Adds a number to the square.
-  def addNumber(n: Int)() =
-    number = Option(n)
+  // Adds a number to the square. Returns a boolean value indicating whether the adding number worked.
+  def addNumber(n: Int): Boolean =
+    var bool = false
 
-  // Deletes number from a square.
-  def deleteNumber() =
-    number = None
+    if !bigGrid.getRowNumbers(row).contains(n) && !bigGrid.getColNumbers(col).contains(n) then
+      number = Option(n)
+      bool = true
+
+    bool
+
+  // Deletes number from a square. Returns a boolean value to indicate whether the deletion worked.
+  def deleteNumber: Boolean =
+    var bool = false
+
+    if number.nonEmpty then
+      number = None
+      bool = true
+
+    bool
 
   // Gives the position of the square as (row, column).
   def getPosition: (Int, Int) =
     (row, col)
- 
+
 
 
