@@ -19,24 +19,31 @@ import scalafx.scene.layout.FlowPane
 import scalafx.scene.layout.HBox
 import scalafx.scene.input.MouseEvent
 import scalafx.scene.control._
+import killer.BigGrid
+import scalafx.Includes._
+import scalafx.scene.control.Dialog
+import scalafx.scene.control.ButtonType
 
-
-object Main extends JFXApp3:
+object Main extends JFXApp3 :
 
   var lastPos = Vector[Double]()
+  var theGrid = new BigGrid(9, 9, Array.fill[Option[Int]](9, 9)(None))
 
   def start(): Unit =
     val pane = new GridPane()
     val bGrid = new GridPane()
+    val squares = Vector(Vector(0.0, 0.0))
+
     for i <- 0 until 9
-      j <- 0 until 9
+        j <- 0 until 9
     do
       val square = new Label("")
       square.setMinWidth(50)
       square.setMinHeight(50)
-      //square.text <== when (square.hover) choose "1\n   2" otherwise ""
-      square.style <== when (square.hover) choose "-fx-border-color: black; -fx-background-color: #00ff00;" otherwise "-fx-border-color: black; -fx-background-color: #ffff00; "
+      square.style = "-fx-border-color: black; "
       square.font = Font.font(15)
+      if (i == 0 && j == 0) then
+        square.style = "-fx-border-color: black; -fx-background-color: #8fbc8f "
       bGrid.add(square, j, i)
 
     for (node <- bGrid.children) do
@@ -54,45 +61,68 @@ object Main extends JFXApp3:
       num.setMinHeight(40)
       num.setMinWidth(40)
       num.font = Font.font(20)
-      num.style <== when (num.pressed) choose "-fx-background-color: #faebd7;" otherwise "-fx-background-color: white; "
+      num.style <== when(num.pressed) choose "-fx-background-color: #faebd7;" otherwise "-fx-background-color: white; "
       hbox.getChildren.addAll(num)
       number = number + 1
+/*
+    val button = new Button("Error")
+      button.visible = false  // Start with the button hidden
+      button.onAction = handle {
+        // Show the dialog when the button is clicked
+        val dialog = new Dialog[Unit]() {
+          title = "Error"
+          headerText = "Invalid Action"
+          contentText = "This action is not possible in Sudoku."
+          dialogPane().buttonTypes = Seq(ButtonType.OK) }
+        dialog.showAndWait()
+        button.visible = false
+      }*/
 
     for node <- hbox.getChildren do
       node.onMouseClicked = (e: MouseEvent) =>
         if lastPos.nonEmpty then
           println(s"Clicked on square at position $lastPos")
-          //println(s"Text before: ${node.asInstanceOf[scalafx.scene.control.Label].text.value}")
           var text = node.asInstanceOf[javafx.scene.control.Button].text.value
           for i <- bGrid.getChildren do
             if (i.layoutXProperty().value == lastPos(0)) && (i.layoutYProperty().value == lastPos(1)) then
-              i.asInstanceOf[javafx.scene.control.Label].alignment = scalafx.geometry.Pos.Center
-              i.asInstanceOf[javafx.scene.control.Label].text = node.asInstanceOf[javafx.scene.control.Button].text.toString.drop(node.asInstanceOf[javafx.scene.control.Button].text.toString.length-2).dropRight(1)
-              println(node.asInstanceOf[javafx.scene.control.Button].text.toString.drop(node.asInstanceOf[javafx.scene.control.Button].text.toString.length-2).dropRight(1))
-          //println(s"Text after: ${node.asInstanceOf[scalafx.scene.control.Label].text.value}")
+              val buttonsText = node.asInstanceOf[javafx.scene.control.Button].text.toString.drop(node.asInstanceOf[javafx.scene.control.Button].text.toString.length - 2).dropRight(1)
+              val label = i.asInstanceOf[javafx.scene.control.Label]
+              label.alignment = scalafx.geometry.Pos.Center
+              label.text = buttonsText
+              label.style = "-fx-border-color: black; -fx-background-color: #00ff00; "
+              //println(node.asInstanceOf[javafx.scene.control.Button].text.toString.drop(node.asInstanceOf[javafx.scene.control.Button].text.toString.length - 2).dropRight(1)))
+              if !theGrid.everyInstanceDone(buttonsText.toInt) then
+                theGrid.updateElement((lastPos(0) / 50.0).toInt, (lastPos(1) / 50.0).toInt, buttonsText.toInt)
+              else
+                // Create the dialog
+                val dialog = new Dialog[Unit]() {
+                  title = "Error"
+                  //headerText = "Invalid Action"
+                  contentText = "All instances of this number have already been placed."
+                  dialogPane().buttonTypes = Seq(ButtonType.OK) }
+                // Show the dialog
+                dialog.showAndWait()
+                //button.visible = true
+              println("the column numbers: " + theGrid.getColNumbers((lastPos(0) / 50.0).toInt))
+              println("the row numbers: " + theGrid.getRowNumbers((lastPos(1) / 50.0).toInt))
+              println("every instance done: " + theGrid.everyInstanceDone(1))
 
       lastPos = Vector()
 
-
-    //hbox.getChildren.head.onMouseClicked = println("Click!")
-
-
-
-
+    val flow = new FlowPane()
+     // flow.children += button
 
     val borderPane = new BorderPane()
     borderPane.setCenter(bGrid)
-    borderPane.setRight(new FlowPane())
+    borderPane.setRight(flow)
     borderPane.setBottom(hbox)
+
+
 
     val scene = new Scene(borderPane, 600, 600)
 
-
-    stage = new JFXApp3.PrimaryStage
+      stage = new JFXApp3.PrimaryStage
       stage.height = 600
       stage.width = 600
       stage.title = "Killer Sudoku"
       stage.scene = scene
-
-
-
