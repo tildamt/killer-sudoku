@@ -64,19 +64,6 @@ object Main extends JFXApp3 :
       num.style <== when(num.pressed) choose "-fx-background-color: #faebd7;" otherwise "-fx-background-color: white; "
       hbox.getChildren.addAll(num)
       number = number + 1
-/*
-    val button = new Button("Error")
-      button.visible = false  // Start with the button hidden
-      button.onAction = handle {
-        // Show the dialog when the button is clicked
-        val dialog = new Dialog[Unit]() {
-          title = "Error"
-          headerText = "Invalid Action"
-          contentText = "This action is not possible in Sudoku."
-          dialogPane().buttonTypes = Seq(ButtonType.OK) }
-        dialog.showAndWait()
-        button.visible = false
-      }*/
 
     for node <- hbox.getChildren do
       node.onMouseClicked = (e: MouseEvent) =>
@@ -106,8 +93,8 @@ object Main extends JFXApp3 :
               println("the column numbers: " + theGrid.getColNumbers((lastPos(0) / 50.0).toInt))
               println("the row numbers: " + theGrid.getRowNumbers((lastPos(1) / 50.0).toInt))
               println("every instance done: " + theGrid.everyInstanceDone(1))
+          lastPos = Vector[Double]()
 
-      lastPos = Vector()
 
     val flow = new FlowPane()
      // flow.children += button
