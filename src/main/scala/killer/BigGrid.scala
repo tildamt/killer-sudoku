@@ -10,18 +10,21 @@ class BigGrid(rows: Int, cols: Int, squares: Array[Array[Option[Int]]]):
   def updateElement(r: Int, c: Int, n: Int) =
     grid(r)(c) = Some(n)
 
+  /*def getRowNumbers(r: Int): Buffer[Int] =
+    val optionNumbers = grid(r).filter(_.nonEmpty)
+    optionNumbers.map(_.get).toBuffer*/
+
+  def getColNumbers(c: Int) /*Buffer[Option[Int]] */=
+    grid.map(_(c))//.toBuffer
+
 
   // This method is used to get all the numbers on a certain column on the grid.
-  def getRowNumbers(c: Int): Buffer[Int] =
-    val optionNumbers = (for (row <- grid) yield row(c)).filter(_.nonEmpty)
-    var numbers = Buffer[Int]()
-    for number <- optionNumbers do
-      if number.nonEmpty then numbers.append(number.get)  // I think get is suitable here since I've already checked twice for the element not to empty.
-    numbers
+  def getRowNumbers(c: Int) /*Seq[Int]*/ =
+    grid(c)//.filter(_.nonEmpty).map(x => x.get).toSeq
 
   // This method is used to get all the numbers on a certain row on the grid.
-  def getColNumbers(r: Int): Buffer[Option[Int]] =
-    grid(r).filter(_.nonEmpty).toBuffer//.map(_.get)
+  /*def getRowNumbers(r: Int): Buffer[Option[Int]] =
+    grid(r).filter(_.nonEmpty).toBuffer//.map(_.get)*/
 
   // This method is used to check whether the grid has already been completed.
   def isCompleted: Boolean =
