@@ -1,13 +1,13 @@
-FIRST INTERIM REPORT 6.3.2022
+FIRST INTERIM REPORT 6.3.2023
 
-I have added the BigGrid- and SubArea-classes as well
+I have added the killer.BigGrid- and killer.SubArea-classes as well
 as some work for the ScalaFX. Now it contains the unfinished
 grid and candidate numbers. The sub-area now calculates all
 possible combinations and big grid has most of its basic functionality,
 although without the class square it isn't finished.
 
 I've tested the possibleCombinations-method in REPL and will add the
-unit testing this week, probably. I've also tested BigGrid's main functions
+unit testing this week, probably. I've also tested killer.BigGrid's main functions
 with REPL.
 
 It was difficult to get the ScalaFX to work even with completely
@@ -17,3 +17,20 @@ I think the workload has already been around 10 to 15-ish hours, although I'm la
 in the schedule because most of the time is spent searching for tips on ScalaFX...
 It's hard to keep up with the schedule because all the other courses at the moment take a lot
 of time as well and their deadlines happen to be more or less weekly...
+
+SECOND INTERIM REPORT 20.3.2023
+
+I've implemented the basic version of the gui, since last time I added the box for
+possible combinations (although not working yet). Now the user can add numbers to the
+squares, and it also sends error messages if the user tries to add numbers to the squares
+they cannot be added to. I've also realised that the sub-grid class is probably useless,
+and I've replaced it by mapping the squares to their corresponding sub-grids. I fixed some
+issues with the sub-grid's logic of checking whether the same numbers had been added to the
+row or column before. I tested these with the gui.
+
+Next I'll work on the sub-areas. I asked some help from the assistant before, but I'm not sure
+if it would be easier to just color the sub-areas with different colors since I cannot figure out
+how to differentiate them from each other with the dashed lines :-D I'm still not exactly on schedule,
+but I think the main missing points are the highlighting of the candidate numbers, sub-areas and the file-
+handling. And the tests I'll have to make!!
+
