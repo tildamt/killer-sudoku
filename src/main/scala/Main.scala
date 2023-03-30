@@ -112,7 +112,7 @@ object Main extends JFXApp3 :
       num.setMinHeight(40)
       num.setMinWidth(40)
       num.font = Font.font(20)
-      num.style = "-fx-background-color: blue; "
+      num.style = "-fx-background-color: #ffa07a; "
       hbox.getChildren.addAll(num)
       number = number + 1
 
@@ -143,7 +143,7 @@ object Main extends JFXApp3 :
         //println("x, y: " + (xLabel, yLabel))
         val rowNumbers = theGrid.getRowNumbers(xLabel)
         val colNumbers = theGrid.getColNumbers(yLabel)
-        val subgridNumbers =  subgrids.find( (a, b) => b.contains(square)).get(1).filter(_ != square).map(x => x.text.value)
+        val subgridNumbers = subgrids.find((_, b) => b.contains(square)).get._2.filter(_.text.value.nonEmpty).map(_.text.value.toInt).toSet
         def canAdd(c: Int): Boolean =
           !rowNumbers.contains(Option(c)) &&
             !colNumbers.contains(Option(c)) &&
@@ -152,16 +152,12 @@ object Main extends JFXApp3 :
           .toVector
           .map(a => a.asInstanceOf[javafx.scene.control.Button])
           .filter(b => canAdd(b.getText.replaceAll("[^0-9]", "").toInt))
-          .foreach( _.style = "-fx-background-color: red; ")
+          .foreach( _.style = "-fx-background-color: #add8e6; ")
         square.onMouseExited = (e: MouseEvent) =>
            hbox.getChildren
           .toVector
           .map(a => a.asInstanceOf[javafx.scene.control.Button])
-          .foreach( _.style = "-fx-background-color: blue; ")
-
-
-
-
+          .foreach( _.style = "-fx-background-color: #ffa07a; ")
 
           println("subgrid " + subgridNumbers.mkString("Array(", ", ", ")"))
           println("column " + rowNumbers.mkString("Array(", ", ", ")"))
