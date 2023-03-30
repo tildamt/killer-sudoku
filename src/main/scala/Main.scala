@@ -1,3 +1,4 @@
+import javafx.beans.property.SimpleStringProperty
 import scalafx.scene.layout.BorderStrokeStyle
 import scalafx.application.{JFXApp, JFXApp3}
 import scalafx.Includes.*
@@ -25,14 +26,40 @@ import scalafx.event.ActionEvent
 import scalafx.scene.control.Dialog
 import scalafx.scene.control.ButtonType
 import killer.SubArea
-
+import scalafx.beans.property.StringProperty
+import scalafx.scene.layout.StackPane
+import scalafx.scene.paint.Color
+import scalafx.scene.shape.Rectangle
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.Buffer
+import scala.language.postfixOps
+import scalafx.scene.shape.Polygon
+import scalafx.scene.paint.Color
 
 object Main extends JFXApp3 :
 
   var lastPos = Vector[Double]() // This variable is used for saving the last position of the square that has been clicked.
   var theGrid = new BigGrid(9, 9, Array.fill[Option[Int]](9, 9)(None)) // I create a new grid to use its methods.
+
+  val subAreaColors = Map(
+  (0, 0) -> "lightgray",
+  (0, 1) -> "white",
+  (0, 2) -> "lightgray",
+  (1, 0) -> "white",
+  (1, 1) -> "lightgray",
+  (1, 2) -> "white",
+  (2, 0) -> "lightgray",
+  (2, 1) -> "white",
+  (2, 2) -> "lightgray"
+  )
+
+  def getSubArea(i: Int, j: Int): (Int, Int) = {
+    val rowSubArea = i / 3
+    val colSubArea = j / 3
+    (rowSubArea, colSubArea)
+  }
+
 
   def start(): Unit =
 
@@ -54,7 +81,6 @@ object Main extends JFXApp3 :
     )
 
 
-
     // In this part, I add the labels that represent the squares on the grid. Then I add them to the subgrids created above.
     for i <- 0 until 9
         j <- 0 until 9
@@ -70,16 +96,12 @@ object Main extends JFXApp3 :
       val subgridCol = j / 3 * 3
       subgrids((subgridRow, subgridCol)) += square
 
+      val (subAreaRow, subAreaCol) = getSubArea(i, j)
+      val subAreaColor = subAreaColors((subAreaRow, subAreaCol))
+      val newStyle = s"${square.style.value} -fx-background-color: $subAreaColor;"
+      square.style = newStyle
 
 
-    // In this part, I loop over bGrid's children (essentially the squares or cells), and when the user clicks on
-    // the square, its position on the grid is saved into a variable called lastPos.
-    for (node <- bGrid.children) do
-      node.onMouseClicked = (e: MouseEvent) =>
-        lastPos = Vector(node.layoutXProperty().value, node.layoutYProperty().value)
-        println(lastPos)
-
-    // In the next part, I create a new hBox and add the candidate numbers to it.
     val hbox = new HBox()
     hbox.setPadding(Insets(15, 12, 15, 12))
     hbox.setSpacing(10)
@@ -90,34 +112,61 @@ object Main extends JFXApp3 :
       num.setMinHeight(40)
       num.setMinWidth(40)
       num.font = Font.font(20)
+      num.style = "-fx-background-color: blue; "
       hbox.getChildren.addAll(num)
       number = number + 1
 
+    // In this part, I loop over bGrid's children (essentially the squares or cells), and when the user clicks on
+    // the square, its position on the grid is saved into a variable called lastPos.
+    for (node <- bGrid.children) do
+      val xPos = node.layoutXProperty().value
+      val yPos = node.layoutYProperty().value
+      //println("x, y : " + (xPos, yPos))
+      node.onMouseClicked = (e: MouseEvent) =>
+        lastPos = Vector(node.layoutXProperty().value, node.layoutYProperty().value)
+        println("clicked: " + (node.layoutXProperty().value, node.layoutYProperty().value))
 
-    // This is progress for adding the functionality of where the candidate numbers are highlighted while the user is hovering
-    // over a square... It's not working quite right just yet, but I'd like to make a commit anyway right now.
-    for label <- bGrid.getChildren do
-      val square = label.asInstanceOf[javafx.scene.control.Label]
-      val xPos = (square.layoutXProperty().value / 50.0).toInt
-      val yPos = (square.layoutYProperty().value / 50.0).toInt
-      val rowNumbers = theGrid.getRowNumbers(xPos)
-      val colNumbers = theGrid.getColNumbers(yPos)
-      val subgridNumbers =  subgrids.find( (a, b) => b.contains(label)).get(1).filter(_ != label).map(x => x.text.value)
-      label.onMouseEntered = (e: MouseEvent) =>
-        for button <- hbox.getChildren do
-          val candidate = button.asInstanceOf[javafx.scene.control.Button]
-          val candidateNumber = candidate.text.toString.drop(candidate.text.toString.length - 2).dropRight(1).toInt
-          if !rowNumbers.contains(Option(candidateNumber))
-            && !colNumbers.contains(Option(candidateNumber))
-            && !subgridNumbers.contains(candidateNumber) then
-            candidate.style = "-fx-background-color: red; "
-          else
-            candidate.style = "-fx-background-color: blue; "
-      label.onMouseExited = (e: MouseEvent) =>
-        for button <- hbox.getChildren do
-          val candidate = button.asInstanceOf[javafx.scene.control.Button]
-          candidate.style = "-fx-background-color: yellow; "
+    //bGrid.children.foreach( a => a.addEventHandler)
 
+//    hbox.children.foreach(a =>
+  //    a.asInstanceOf[javafx.scene.control.Button].style <== when(bGrid.children.map(b => b.asInstanceOf[javafx.scene.control.Label].hoverProperty())) choose "-fx-background-color: #0000ff; " otherwise "-fx-background-color: #8b0000; ")
+
+
+
+   // This is progress for adding the functionality of where the candidate numbers are highlighted while the user is hovering
+    // over a square... It's not working quite right just yet, but I'd like to make a commit anyway right now
+
+    for square <- bGrid.children do
+      square.onMouseEntered = (e: MouseEvent) =>
+        val xLabel = (square.layoutXProperty().value / 50.0).toInt
+        val yLabel = (square.layoutYProperty().value / 50.0).toInt
+        //println("x, y: " + (xLabel, yLabel))
+        val rowNumbers = theGrid.getRowNumbers(xLabel)
+        val colNumbers = theGrid.getColNumbers(yLabel)
+        val subgridNumbers =  subgrids.find( (a, b) => b.contains(square)).get(1).filter(_ != square).map(x => x.text.value)
+        def canAdd(c: Int): Boolean =
+          !rowNumbers.contains(Option(c)) &&
+            !colNumbers.contains(Option(c)) &&
+            !subgridNumbers.contains(c)
+        hbox.getChildren
+          .toVector
+          .map(a => a.asInstanceOf[javafx.scene.control.Button])
+          .filter(b => canAdd(b.getText.replaceAll("[^0-9]", "").toInt))
+          .foreach( _.style = "-fx-background-color: red; ")
+        square.onMouseExited = (e: MouseEvent) =>
+           hbox.getChildren
+          .toVector
+          .map(a => a.asInstanceOf[javafx.scene.control.Button])
+          .foreach( _.style = "-fx-background-color: blue; ")
+
+
+
+
+
+          println("subgrid " + subgridNumbers.mkString("Array(", ", ", ")"))
+          println("column " + rowNumbers.mkString("Array(", ", ", ")"))
+          println("row " + colNumbers.mkString("Array(", ", ", ")"))
+          println("x, y: " + (xLabel, yLabel))
 
     // This part of code adds numbers to the grid. In addition, it sends an error message, if the user tries to add a number
     // that already is on the same row, column, or sub-grid. First, it loops over buttons in the hBox, which are the candidate
@@ -128,10 +177,11 @@ object Main extends JFXApp3 :
     for node <- hbox.getChildren do
       node.onMouseClicked = (e: MouseEvent) =>
         if lastPos.nonEmpty then
-          println(s"Clicked on square at position $lastPos")
+          //println(s"Clicked on square at position $lastPos")
           val button = node.asInstanceOf[javafx.scene.control.Button]
           val text = button.text.value
           for i <- bGrid.getChildren do
+           // println("i " + i.layoutXProperty().value)
             if (i.layoutXProperty().value == lastPos(0)) && (i.layoutYProperty().value == lastPos(1)) then
               val buttonsText = node.asInstanceOf[javafx.scene.control.Button].text.toString.drop(node.asInstanceOf[javafx.scene.control.Button].text.toString.length - 2).dropRight(1)
               val label = i.asInstanceOf[javafx.scene.control.Label]
@@ -144,11 +194,7 @@ object Main extends JFXApp3 :
                 && !theGrid.getColNumbers((lastPos(1) / 50.0).toInt).contains(Option(buttonsText.toInt))
                 && !theGrid.getRowNumbers((lastPos(0) / 50.0).toInt).contains(Some(buttonsText.toInt))
               then
-                println(theGrid.getRowNumbers((lastPos(0) / 50.0).toInt).mkString("Array(", ", ", ")"))
                 theGrid.updateElement((lastPos(0) / 50.0).toInt, (lastPos(1) / 50.0).toInt, buttonsText.toInt)
-                println("Placed number " + theGrid.grid((lastPos(0) / 50.0).toInt)((lastPos(1) / 50.0).toInt))
-                println("numbers in column now: " + theGrid.getColNumbers((lastPos(1) / 50.0).toInt).mkString("Array(", ", ", ")"))
-                println("numbers in row now: " + theGrid.getRowNumbers((lastPos(0) / 50.0).toInt).mkString("Array(", ", ", ")"))
               else
                 // Create the dialog
                 val dialog = new Dialog[Unit]() {
@@ -158,9 +204,7 @@ object Main extends JFXApp3 :
                 // Show the dialog
                 dialog.showAndWait()
           lastPos = Vector[Double]()
-          subgrids.foreach { case ((row, col), labels) =>
-      println(s"Sub-grid at ($row, $col): ${labels.map(_.getText)}")
-    }
+
 
     val flow = new FlowPane()
 
