@@ -7,8 +7,8 @@ class BigGrid(rows: Int, cols: Int, squares: Array[Array[Option[Int]]]):
 
   var grid = Array.fill[Option[Int]](9, 9)(None)
 
-  def updateElement(r: Int, c: Int, n: Int) =
-    grid(r)(c) = Some(n)
+  def updateElement(r: Int, c: Int, n: Option[Int]) =
+    grid(r)(c) = n
 
   /*def getRowNumbers(r: Int): Buffer[Int] =
     val optionNumbers = grid(r).filter(_.nonEmpty)
