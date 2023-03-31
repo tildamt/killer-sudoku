@@ -92,13 +92,11 @@ object Main extends JFXApp3 :
       square.font = Font.font(15)
       bGrid.add(square, j, i)
 
+
       val subgridRow = i / 3 * 3
       val subgridCol = j / 3 * 3
       subgrids((subgridRow, subgridCol)) += square
 
-     // val (subAreaRow, subAreaCol) = getSubArea(i, j)
-     // val subAreaColor = subAreaColors((subAreaRow, subAreaCol))
-      //val newStyle = s"${square.style.value} -fx-background-color: $subAreaColor;"
       square.style = "-fx-border-color: black; -fx-background-color: #ffa07a; "
 
 
@@ -124,6 +122,7 @@ object Main extends JFXApp3 :
       node.onMouseClicked = (e: MouseEvent) =>
         lastPos = Vector(node.layoutXProperty().value, node.layoutYProperty().value)
         println("clicked: " + (node.layoutXProperty().value, node.layoutYProperty().value))
+
 
    // This is progress for adding the functionality of where the candidate numbers are highlighted while the user is hovering
     // over a square... It's not working quite right just yet, but I'd like to make a commit anyway right now
@@ -174,7 +173,7 @@ object Main extends JFXApp3 :
                 && !theGrid.getColNumbers((lastPos(1) / 50.0).toInt).contains(Option(buttonsText.toInt))
                 && !theGrid.getRowNumbers((lastPos(0) / 50.0).toInt).contains(Some(buttonsText.toInt))
               then
-                theGrid.updateElement((lastPos(0) / 50.0).toInt, (lastPos(1) / 50.0).toInt, buttonsText.toInt)
+                theGrid.updateElement((lastPos(0) / 50.0).toInt, (lastPos(1) / 50.0).toInt, Some(buttonsText.toInt))
               else
                 // Create the dialog
                 val dialog = new Dialog[Unit]() {
@@ -199,7 +198,10 @@ object Main extends JFXApp3 :
         .map( b => b.asInstanceOf[javafx.scene.control.Label])
           .foreach(_.style = "-fx-border-color: black; -fx-background-color: #ffa07a; ")
 
+
+
     val flow = new FlowPane()
+
 
     // I added a label for the possible combinations. This is still in progress, but just to have something for now!
     val label = new Label
@@ -210,7 +212,24 @@ object Main extends JFXApp3 :
       label.font = Font.font(15)
       label.text = "Possible combinations: "
 
+    // This is a button so the user can delete a number
+    val deleteButton = new Button("Delete number")
+
+    // When the user clicks on the deleteButton, the program checks the last square that was clicked
+    // (if there are any) and deletes that number. I'll probably update it to be prettier later but for
+    // now what works, works...
+    deleteButton.onMouseClicked = (e: MouseEvent) =>
+      if lastPos.nonEmpty then
+        bGrid.children
+          .map(b => b.asInstanceOf[javafx.scene.control.Label])
+          .filter( _.layoutXProperty().value == lastPos(0))
+          .filter( _.layoutYProperty().value == lastPos(1))
+          .foreach( _.text = "")
+        theGrid.updateElement((lastPos(0) / 50.0).toInt, (lastPos(1) / 50.0).toInt, None)
+        lastPos = Vector[Double]()
+
     flow.children += label
+    flow.children += deleteButton
 
     // Changed the borderPane's background color for fun as well. :-)
     val borderPane = new BorderPane {
