@@ -44,7 +44,7 @@ took quite a bit of time (didn't work with the for-loop correctly, but started w
 foreach... this one I was stuck in for a long time). But now all of those functionalities are working.
 
 The main things that are still missing are the cages (sub-areas) and the possible combinations (although after
-I get the cages to work, I think that shouldn't be too difficult to work). The other part still missing is the
+I get the cages to work, I think that shouldn't be too difficult to work out). The other part still missing is the
 file reading part, but I think I have a good idea on how to work on that later on, since the main thing to save
 is just the numbers already on the grid and the cages I can get from the internet. I'll have more time to work
 on this project for this last part of the project, since other courses have fewer deadlines. However, I think
