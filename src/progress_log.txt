@@ -34,3 +34,19 @@ how to differentiate them from each other with the dashed lines :-D I'm still no
 but I think the main missing points are the highlighting of the candidate numbers, sub-areas and the file-
 handling. And the tests I'll have to make!!
 
+THIRD INTERIM REPORT 3.4.2023
+
+Now the program highlights the numbers that can be added to the square when the user is hovering over it.
+In addition, when the user is hovering over the candidate numbers, the grid highlights instances of that
+number already added to the grid. Moreover, the user may now delete the numbers from the grid. All of these
+I've tested with the GUI, although I'll have to work on the other tests as well. The highlighting part
+took quite a bit of time (didn't work with the for-loop correctly, but started working when I switched to
+foreach... this one I was stuck in for a long time). But now all of those functionalities are working.
+
+The main things that are still missing are the cages (sub-areas) and the possible combinations (although after
+I get the cages to work, I think that shouldn't be too difficult to work). The other part still missing is the
+file reading part, but I think I have a good idea on how to work on that later on, since the main thing to save
+is just the numbers already on the grid and the cages I can get from the internet. I'll have more time to work
+on this project for this last part of the project, since other courses have fewer deadlines. However, I think
+my progress is looking good over all since the main functions are working with the GUI now (aside from the cages).
+
