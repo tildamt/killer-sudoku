@@ -1,23 +1,18 @@
 import javafx.beans.property.SimpleStringProperty
-import scalafx.scene.layout.BorderStrokeStyle
+import scalafx.scene.layout.{BorderPane, BorderStrokeStyle, FlowPane, GridPane, HBox, Pane, Region, StackPane}
 import scalafx.application.{JFXApp, JFXApp3}
 import scalafx.Includes.*
 import scalafx.geometry.{Insets, Pos}
 import scalafx.scene.Scene
 import scalafx.scene.control.{Button, Label}
 import scalafx.scene.image.ImageView
-import scalafx.scene.layout.GridPane
 import scalafx.scene.paint.Paint
 import scalafx.scene.text.Font
 import scalafx.scene.paint.Color
 import scalafx.scene.shape.Line
 import scalafx.scene.shape.Rectangle
-import scalafx.scene.layout.Pane
 import scalafx.scene.canvas.Canvas
 import scalafx.scene.image.Image
-import scalafx.scene.layout.BorderPane
-import scalafx.scene.layout.FlowPane
-import scalafx.scene.layout.HBox
 import scalafx.scene.input.MouseEvent
 import scalafx.scene.control.*
 import killer.BigGrid
@@ -27,38 +22,25 @@ import scalafx.scene.control.Dialog
 import scalafx.scene.control.ButtonType
 import killer.SubArea
 import scalafx.beans.property.StringProperty
-import scalafx.scene.layout.StackPane
 import scalafx.scene.paint.Color
 import scalafx.scene.shape.Rectangle
+
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.Buffer
 import scala.language.postfixOps
-import scalafx.scene.shape.Polygon
-import scalafx.scene.paint.Color
+import scalafx.scene.shape.Polyline
+import scalafx.scene.shape.*
+
+
 
 object Main extends JFXApp3 :
 
   var lastPos = Vector[Double]() // This variable is used for saving the last position of the square that has been clicked.
-  var theGrid = new BigGrid(9, 9, Array.fill[Option[Int]](9, 9)(None)) // I create a new grid to use its methods.
+  var theGrid = new BigGrid(9, 9, Array.fill[Option[Int]](9, 9)(None)) // I create a new grid to use its methods
 
-  val subAreaColors = Map(
-  (0, 0) -> "lightgray",
-  (0, 1) -> "white",
-  (0, 2) -> "lightgray",
-  (1, 0) -> "white",
-  (1, 1) -> "lightgray",
-  (1, 2) -> "white",
-  (2, 0) -> "lightgray",
-  (2, 1) -> "white",
-  (2, 2) -> "lightgray"
-  )
 
-  def getSubArea(i: Int, j: Int): (Int, Int) = {
-    val rowSubArea = i / 3
-    val colSubArea = j / 3
-    (rowSubArea, colSubArea)
-  }
+
 
 
   def start(): Unit =
@@ -80,9 +62,47 @@ object Main extends JFXApp3 :
       (6,6) -> new mutable.ArrayBuffer[Label]()
     )
 
+    val cages = List(
+      new SubArea(List((0,0), (1,0)), 3),
+      new SubArea(List((2,0), (3,0), (4, 0)), 15),
+      new SubArea(List((5,0),(5,1),(4,1),(4,2)), 22),
+      new SubArea(List((6,0),(6,1)), 4),
+      new SubArea(List((7,0),(7,1)), 16),
+      new SubArea(List((8,0),(8,1),(8,2),(8,3)), 15),
+      new SubArea(List((0,1),(1,1),(0,2),(1,2)),25),
+      new SubArea(List((2,2),(3,2)), 17),
+      new SubArea(List((2,2),(3,2),(3,3)), 9),
+      new SubArea(List((5,2),(5,3),(5,4)), 8),
+      new SubArea(List((6,2),(7,2),(6,3)), 20),
+      new SubArea(List((0,3),(0,4)), 6),
+      new SubArea(List((1,3),(2,3)), 14),
+      new SubArea(List((4,3),(4,4),(4,5)), 17),
+
+      new SubArea(List((1,4),(2,4),(1,5)),13),
+      new SubArea(List((3,4),(3,5),(3,6)),20),
+      new SubArea(List((8,4),(8,5)), 12),
+
+      new SubArea(List((0,5),(0,6),(0,7),(0,8)), 27),
+      new SubArea(List((2,5),(2,6),(1,6)), 6),
+
+      new SubArea(List((5,5),(5,6),(6,6)), 20),
+      new SubArea(List((6,5),(7,5)), 6),
+
+      new SubArea(List((4,6),(4,7),(3,7),(3,8)),10),
+      new SubArea(List((7,6),(7,7),(8,6),(8,7)),14),
+
+      new SubArea(List((1,7),(1,8)),8),
+      new SubArea(List((2,7),(2,8)),16),
+
+      new SubArea(List((5,7),(6,7)),15),
+      new SubArea(List((4,8),(5,8),(6,8)),13),
+      new SubArea(List((7,8),(8,8)),17),
+      new SubArea(List((7,3),(7,4),(6,4)),17),
+      new SubArea(List((2,1),(3,1)),17))
 
     // In this part, I add the labels that represent the squares on the grid. Then I add them to the subgrids created above.
-    for i <- 0 until 9
+    for
+      i <- 0 until 9
         j <- 0 until 9
     do
       val square = new Label("")
@@ -98,7 +118,6 @@ object Main extends JFXApp3 :
       subgrids((subgridRow, subgridCol)) += square
 
       square.style = "-fx-border-color: black; -fx-background-color: #ffa07a; "
-
 
     val hbox = new HBox()
     hbox.setPadding(Insets(15, 12, 15, 12))
@@ -127,13 +146,14 @@ object Main extends JFXApp3 :
    // This is progress for adding the functionality of where the candidate numbers are highlighted while the user is hovering
     // over a square... It's not working quite right just yet, but I'd like to make a commit anyway right now
 
+
     for square <- bGrid.children do
       square.onMouseEntered = (e: MouseEvent) =>
         val xLabel = (square.layoutXProperty().value / 50.0).toInt
         val yLabel = (square.layoutYProperty().value / 50.0).toInt
         val rowNumbers = theGrid.getRowNumbers(xLabel)
         val colNumbers = theGrid.getColNumbers(yLabel)
-        val subgridNumbers = subgrids.find((_, b) => b.contains(square)).get._2.filter(_.text.value.nonEmpty).map(_.text.value.toInt).toSet
+        val subgridNumbers = subgrids.find( (_, b) => b.contains(square)).get._2.filter(_.text.value.nonEmpty).map(_.text.value.toInt).toSet
         def canAdd(c: Int): Boolean =
           !rowNumbers.contains(Option(c)) &&
             !colNumbers.contains(Option(c)) &&
@@ -143,11 +163,24 @@ object Main extends JFXApp3 :
           .map(a => a.asInstanceOf[javafx.scene.control.Button])
           .filter(b => canAdd(b.getText.replaceAll("[^0-9]", "").toInt))
           .foreach( _.style = "-fx-background-color: #add8e6; ")
+
+        val cage = cages.find(area => area.squares.contains((xLabel, yLabel)))
+
+        val combinations = cage.get.possibleCombinations
+          .filter(sekvenssi => sekvenssi.forall(numero => !rowNumbers.contains(Option(numero))))
+          .filter(sekvenssi => sekvenssi.forall(numero => !colNumbers.contains(Option(numero))))
+          .filter(sekvenssi => sekvenssi.forall(numero => !subgridNumbers.contains((numero))))
+
+        println("combinations: " + combinations + " cage: " + cage.get.summa)
+
+
         square.onMouseExited = (e: MouseEvent) =>
            hbox.getChildren
           .toVector
           .map(a => a.asInstanceOf[javafx.scene.control.Button])
           .foreach( _.style = "-fx-background-color: #ffa07a; ")
+
+
 
     // This part of code adds numbers to the grid. In addition, it sends an error message, if the user tries to add a number
     // that already is on the same row, column, or sub-grid. First, it loops over buttons in the hBox, which are the candidate
@@ -198,10 +231,7 @@ object Main extends JFXApp3 :
         .map( b => b.asInstanceOf[javafx.scene.control.Label])
           .foreach(_.style = "-fx-border-color: black; -fx-background-color: #ffa07a; ")
 
-
-
     val flow = new FlowPane()
-
 
     // I added a label for the possible combinations. This is still in progress, but just to have something for now!
     val label = new Label
