@@ -257,6 +257,8 @@ object Main extends JFXApp3 :
                 && !theGrid.getRowNumbers((lastPos(0) / 50.0).toInt).contains(Some(buttonsText.toInt))
               then
                 theGrid.updateElement((lastPos(0) / 50.0).toInt, (lastPos(1) / 50.0).toInt, Some(buttonsText.toInt))
+                if theGrid.everyInstanceDone(buttonsText.toInt) then
+                  button.disable = true
               else
                 // Create the dialog
                 val dialog = new Dialog[Unit]() {
