@@ -177,13 +177,7 @@ object Main extends JFXApp3 :
           .filter(b => canAdd(b.getText.replaceAll("[^0-9]", "").toInt))
           .foreach( _.style = "-fx-background-color: #add8e6; ")
 
-        //println("neliön vitun teksti: " + square.asInstanceOf[javafx.scene.control.Label].text.value)
-
-        //val cellnumber = square.asInstanceOf[javafx.scene.control.Label].text.value.toInt
-
         val cage = cages.find(area => area.squares.contains((xLabel, yLabel)))
-        println("SAATANAN PERSE: " + cage)
-
 
         // with the variable labels i get the labels numbers
         // first i map bgrid's children to be instances of labels
