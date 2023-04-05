@@ -146,9 +146,22 @@ object Main extends JFXApp3 :
    // This is progress for adding the functionality of where the candidate numbers are highlighted while the user is hovering
     // over a square... It's not working quite right just yet, but I'd like to make a commit anyway right now
 
+    val label = new Label
+      label.alignment = scalafx.geometry.Pos.TopLeft
+      label.setMinWidth(400)
+      label.setMinHeight(300)
+      label.style = "-fx-border-color: black; -fx-background-color: #e6e6fa; "
+      label.font = Font.font(15)
+      label.textFill = javafx.scene.paint.Color.BLACK
+      label.text = ""
+
+    val flow = new FlowPane()
+    flow.children += label
+
 
     for square <- bGrid.children do
       square.onMouseEntered = (e: MouseEvent) =>
+
         val xLabel = (square.layoutXProperty().value / 50.0).toInt
         val yLabel = (square.layoutYProperty().value / 50.0).toInt
         val rowNumbers = theGrid.getRowNumbers(xLabel)
@@ -164,14 +177,58 @@ object Main extends JFXApp3 :
           .filter(b => canAdd(b.getText.replaceAll("[^0-9]", "").toInt))
           .foreach( _.style = "-fx-background-color: #add8e6; ")
 
+        //println("neliön vitun teksti: " + square.asInstanceOf[javafx.scene.control.Label].text.value)
+
+        //val cellnumber = square.asInstanceOf[javafx.scene.control.Label].text.value.toInt
+
         val cage = cages.find(area => area.squares.contains((xLabel, yLabel)))
+        println("SAATANAN PERSE: " + cage)
 
-        val combinations = cage.get.possibleCombinations
-          .filter(sekvenssi => sekvenssi.forall(numero => !rowNumbers.contains(Option(numero))))
-          .filter(sekvenssi => sekvenssi.forall(numero => !colNumbers.contains(Option(numero))))
-          .filter(sekvenssi => sekvenssi.forall(numero => !subgridNumbers.contains((numero))))
 
-        println("combinations: " + combinations + " cage: " + cage.get.summa)
+        // with the variable labels i get the labels numbers
+        // first i map bgrid's children to be instances of labels
+        // then i map the labels to their positions
+        // then i filter labels which don't have any text attached
+        // then i map the labels to their values
+        val labelsnumbers =
+          bGrid.children
+            .map(node => node.asInstanceOf[javafx.scene.control.Label])
+            .map(a => a -> ((a.layoutXProperty().value / 50.0).toInt, (a.layoutYProperty().value / 50.0).toInt))
+            .filter( (lappu, sijainti: (Int, Int)) => cage.get.squares.contains(sijainti))
+            .filter( (lappu: javafx.scene.control.Label, sijainti) => lappu.text.value != "")
+            .map( (lappu: javafx.scene.control.Label, sijainti) => lappu.text.value.toInt)
+
+        // all the labels in a cage
+        val labelsInCage: scalafx.collections.ObservableBuffer[(javafx.scene.control.Label)] =
+          bGrid.children
+            .map(node => node.asInstanceOf[javafx.scene.control.Label])
+            .map(a => a -> ((a.layoutXProperty().value / 50.0).toInt, (a.layoutYProperty().value / 50.0).toInt))
+            .filter( (lappu, sijainti: (Int, Int)) => cage.get.squares.contains(sijainti))
+            .map( (lappu, sijainti) => lappu)
+
+
+        // this variable gets us all the numbers in the subgrids the cage belongs to
+        val subs: Map[(Int, Int), scala.collection.mutable.ArrayBuffer[Int]] =
+          subgrids
+            .filter( (numero, laput) => laput.toSeq.intersect(labelsInCage.toSeq).nonEmpty)
+            .map( (numero, laput) => (numero, laput.filter(_.text.value != "")))
+            .map( (numero, laput) => (numero, laput.map(_.text.value.toInt)))
+
+
+
+        def possible(n: Int): Boolean =
+          // yhdistelmä on mahdollinen, jos numero esiintyy maksimissaan subgridien määrä - 1 kertaa subgrideissä
+          subs.values.flatten.toVector.count( _ == n) <= subs.keys.size - 1
+
+        // i get the possible combinations here, and then filter already placed numbers from those
+
+        val combinations =
+          cage.get.possibleCombinations
+            .map( (a: IndexedSeq[Int]) => a.filter( !labelsnumbers.contains(_)))
+            .map( a => a.filter(canAdd(_)))
+
+        // Changing the labels text
+        label.text = "Possible combinations: " + "\n" + combinations.map(_.mkString(", ")).mkString("\n")
 
 
         square.onMouseExited = (e: MouseEvent) =>
@@ -179,7 +236,6 @@ object Main extends JFXApp3 :
           .toVector
           .map(a => a.asInstanceOf[javafx.scene.control.Button])
           .foreach( _.style = "-fx-background-color: #ffa07a; ")
-
 
 
     // This part of code adds numbers to the grid. In addition, it sends an error message, if the user tries to add a number
@@ -231,16 +287,16 @@ object Main extends JFXApp3 :
         .map( b => b.asInstanceOf[javafx.scene.control.Label])
           .foreach(_.style = "-fx-border-color: black; -fx-background-color: #ffa07a; ")
 
-    val flow = new FlowPane()
+
 
     // I added a label for the possible combinations. This is still in progress, but just to have something for now!
-    val label = new Label
+    /*val label = new Label
       label.alignment = scalafx.geometry.Pos.TopLeft
       label.setMinWidth(400)
       label.setMinHeight(300)
       label.style = "-fx-border-color: black; -fx-background-color: #e6e6fa; "
       label.font = Font.font(15)
-      label.text = "Possible combinations: "
+      label.text = "Possible combinations: "*/
 
     // This is a button so the user can delete a number
     val deleteButton = new Button("Delete number")
@@ -258,7 +314,7 @@ object Main extends JFXApp3 :
         theGrid.updateElement((lastPos(0) / 50.0).toInt, (lastPos(1) / 50.0).toInt, None)
         lastPos = Vector[Double]()
 
-    flow.children += label
+
     flow.children += deleteButton
 
     // Changed the borderPane's background color for fun as well. :-)
