@@ -251,8 +251,9 @@ object Main extends JFXApp3 :
       label.setMinHeight(300)
       label.style = "-fx-border-color: black; -fx-background-color: #e6e6fa; "
       label.font = Font.font(15)
+      label.font = Font.font("Comic Sans MS")
       label.textFill = javafx.scene.paint.Color.BLACK
-      label.text = ""
+      label.text = "Possible combinations"
 
     val flow = new FlowPane()
     flow.children += label
@@ -297,8 +298,17 @@ object Main extends JFXApp3 :
             .map(a => a -> ((a.layoutXProperty().value / 50.0).toInt, (a.layoutYProperty().value / 50.0).toInt))
             .filter( (lappu, sijainti: (Int, Int)) => cage.get.squares.contains(sijainti))
             .filter( (lappu: javafx.scene.control.Label, sijainti) => lappu.text.value != "")
-            .map( (lappu: javafx.scene.control.Label, sijainti) => lappu.text.value.last.toInt).toVector
+            .map( (lappu: javafx.scene.control.Label, sijainti) => lappu.text.value.last.asDigit).toVector
 
+        // current sum of the numbers in the cage
+        val currentSum = labelsnumbers.sum
+       // println("curr
+        val originalsum = cage.get.summa
+        val npossibilities = originalsum - currentSum
+        val ncombs =
+          (1 to 9).toSeq.combinations(cage.get.squares.size).toSeq.filter( _.sum == npossibilities).filter( sek => sek.intersect(cage.get.possibleCombinations).nonEmpty)
+        println("newww " + ncombs)
+        println("mahhh " + npossibilities)
 
         // all the labels in a cage
         val labelsInCage: scalafx.collections.ObservableBuffer[(javafx.scene.control.Label)] =
@@ -362,6 +372,8 @@ object Main extends JFXApp3 :
         label.text = "Possible combinations: " + "\n" + combinations.map(_.mkString(", ")).mkString("\n")
 
         square.onMouseExited = (e: MouseEvent) =>
+          label.font = Font.font("Comic Sans MS")
+          label.text = "Possible combinations: "
            hbox.getChildren
           .toVector
           .map(a => a.asInstanceOf[javafx.scene.control.Button])
