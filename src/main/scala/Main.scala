@@ -291,13 +291,14 @@ object Main extends JFXApp3 :
         // then i map the labels to their positions
         // then i filter labels which don't have any text attached
         // then i map the labels to their values
-        val labelsnumbers =
+        val labelsnumbers: Vector[Int] =
           bGrid.children
             .map(node => node.asInstanceOf[javafx.scene.control.Label])
             .map(a => a -> ((a.layoutXProperty().value / 50.0).toInt, (a.layoutYProperty().value / 50.0).toInt))
             .filter( (lappu, sijainti: (Int, Int)) => cage.get.squares.contains(sijainti))
             .filter( (lappu: javafx.scene.control.Label, sijainti) => lappu.text.value != "")
-            .map( (lappu: javafx.scene.control.Label, sijainti) => lappu.text.value.last.toInt)
+            .map( (lappu: javafx.scene.control.Label, sijainti) => lappu.text.value.last.toInt).toVector
+
 
         // all the labels in a cage
         val labelsInCage: scalafx.collections.ObservableBuffer[(javafx.scene.control.Label)] =
@@ -307,19 +308,42 @@ object Main extends JFXApp3 :
             .filter( (lappu, sijainti: (Int, Int)) => cage.get.squares.contains(sijainti))
             .map( (lappu, sijainti) => lappu)
 
+
+        //println("pylly " + cage.map( area => area.squares).get.map( first => theGrid.getRowNumbers(first._1)))
+        for i <- cage do
+          for cell <- i.squares do
+            val rows = theGrid.getRowNumbers(cell._1)
+            val cols = theGrid.getColNumbers(cell._2)
+
+
+
         // this variable gets us all the numbers in the subgrids the cage belongs to
         val subs: Map[(Int, Int), scala.collection.mutable.ArrayBuffer[Int]] =
           subgrids
             .filter( (numero, laput) => laput.toSeq.intersect(labelsInCage.toSeq).nonEmpty)
             .map( (numero, laput) => (numero, laput.filter(_.text.value != "")))
-            .map( (numero, laput) => (numero, laput.map(_.text.value.last.toInt)))
+            .map( (numero, laput) => (numero, laput.map(_.text.value.last.asDigit)))
 
-        val thisSubgrid = subgrids.find( (_, b) => b.contains(square)).get._1
 
+        for i <- cage do
+          for cell <- i.squares do
+            val rows = theGrid.getRowNumbers(cell._1)
+            val cols = theGrid.getColNumbers(cell._2)
+            //val subsnumbers =
+        //println("subien arvot: " + subs.values.flatten)
         def possible(n: Int): Boolean =
           // yhdistelmä on mahdollinen, jos numero esiintyy maksimissaan subgridien määrä - 1 kertaa subgrideissä
-          subs.values.flatten.toVector.count( _ == n) < subs.keys.size - 1
 
+          subs.values.flatten.toVector.count( _ == n) <= subs.keys.size - 1
+
+        //println("mahis: " + cage.get.possibleCombinations.filter(sek => sek.forall(a => possible(a))))
+
+        val subgridsnumbers = subs.values.flatten.toVector
+        val possiblenumbers = (1 to 9).filter( n => !labelsnumbers.contains(n)).filter(n => !subgridsnumbers.contains(n))
+        //println("possiblee " + possiblenumbers)
+        //println("perse: " +  cage.get.possibleCombinations.filter { combination =>
+          //combination.forall(n => possiblenumbers.contains(n))
+        //})
 
         // i get the possible combinations here, and then filter already placed numbers from those
 
@@ -368,6 +392,7 @@ object Main extends JFXApp3 :
                 && !theGrid.getRowNumbers((lastPos(0) / 50.0).toInt).contains(Some(buttonsText.toInt))
               then
                 theGrid.updateElement((lastPos(0) / 50.0).toInt, (lastPos(1) / 50.0).toInt, Some(buttonsText.toInt)) // updating the element to the grid
+
                 label.alignment = Pos.TopLeft
                 label.font = Font.font("Comic Sans MS")
                 label.text =
@@ -424,11 +449,11 @@ object Main extends JFXApp3 :
           .text
           .value
           .last
-          .toInt
+          .asDigit
 
         val nappi = hbox.children
           .map(b => b.asInstanceOf[javafx.scene.control.Button])
-          .filter( _.text.value.toInt != numberHere)
+          .filter( _.text.value.head.asDigit == numberHere)
           .head
 
         bGrid.children
@@ -436,10 +461,11 @@ object Main extends JFXApp3 :
           .filter( _.layoutXProperty().value == lastPos(0))
           .filter( _.layoutYProperty().value == lastPos(1))
           .foreach( _.text = "")
-          theGrid.updateElement((lastPos(0) / 50.0).toInt, (lastPos(1) / 50.0).toInt, None)
+        theGrid.updateElement((lastPos(0) / 50.0).toInt, (lastPos(1) / 50.0).toInt, None)
 
-        if !theGrid.everyInstanceDone(numberHere) && nappi.disable.value then
+        if !theGrid.everyInstanceDone(nappi.text.value.head.asDigit) then
           nappi.disable = false
+
         lastPos = Vector[Double]()
       else
           val dialog = new Dialog[Unit]() {
@@ -447,6 +473,8 @@ object Main extends JFXApp3 :
              contentText = "You must click on the cell you want to delete the number from first!"
              dialogPane().buttonTypes = Seq(ButtonType.OK) }
              dialog.showAndWait()
+
+
 
     flow.children += deleteButton
 
