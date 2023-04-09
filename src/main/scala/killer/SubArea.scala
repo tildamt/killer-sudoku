@@ -12,11 +12,4 @@ class SubArea(val squares: List[(Int, Int)], val summa: Int):
   def possibleCombinations: Seq[IndexedSeq[Int]] =
     (1 to 9).toSeq.combinations(squares.size).toSeq.filter( _.sum == summa)
 
-  // I'm representing the squares with only integers now, so this method isn't
-  // truly in its final form. For the real version, maybe mapping the numbers would be great.
-  //def getReadyNumbers: List[Int] =
-    //squares
-
-  // The sub-area is finished when its placed numbers sum equals the sub-area's sum.
-  //def isFinished: Boolean =
-    //getReadyNumbers.sum == summa
+  override def toString: String = "Squares: " + squares + " summa: " + summa
