@@ -30,7 +30,7 @@ import scala.collection.mutable
 
 
 
-class CreateGrid(app: JFXApp3, cages: List[SubArea], var arr: Array[Array[Option[Int]]]):
+class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Option[Int]]]):
 
   val bGrid = new GridPane()
   var lastPos = Vector[Double]()   // this is to keep track of the last cell that was clicked on
@@ -473,6 +473,7 @@ class CreateGrid(app: JFXApp3, cages: List[SubArea], var arr: Array[Array[Option
               dialog2.showAndWait()
           else
             ngame.paikat(value, theGrid.grid, cages)
+            
         case None =>
 
     val continueGameButton = new Button("Continue Game")
