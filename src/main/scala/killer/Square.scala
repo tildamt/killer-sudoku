@@ -9,11 +9,9 @@ class Square(row: Int, col: Int, subGrid: SubGrid, bigGrid: BigGrid):
   // Adds a number to the square. Returns a boolean value indicating whether the adding number worked.
   def addNumber(n: Int): Boolean =
     var bool = false
-
-    if !bigGrid.getRowNumbers(row).contains(n) && !bigGrid.getColNumbers(col).contains(n) then
+    if !bigGrid.getRowNumbers(row).contains(Option(n)) && !bigGrid.getColNumbers(col).contains(Option(n)) then
       number = Option(n)
       bool = true
-
     bool
 
   // Deletes number from a square. Returns a boolean value to indicate whether the deletion worked.
