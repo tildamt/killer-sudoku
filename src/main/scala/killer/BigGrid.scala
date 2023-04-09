@@ -5,7 +5,7 @@ import killer.Square
 
 class BigGrid(rows: Int, cols: Int, squares: Array[Array[Option[Int]]]):
 
-  var grid = Array.fill[Option[Int]](9, 9)(None)
+  var grid = squares
 
   def updateElement(r: Int, c: Int, n: Option[Int]) =
     grid(r)(c) = n
