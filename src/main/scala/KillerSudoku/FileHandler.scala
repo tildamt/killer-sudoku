@@ -1,14 +1,16 @@
-package killer
+package KillerSudoku
 
 import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._
-import killer.SubArea
+import KillerSudoku.SubArea
 import java.nio.file.{Paths, Files}
 
-class filehandling:
+class FileHandler:
 
   case class GameState(game: Array[Array[Option[Int]]])
   case class CurrentCages(cells: List[(Int, Int)], sum: Int)
   case class WholeGame(state: GameState, subareas: List[CurrentCages])
+
+  var errorText = ""
 
   def paikat(n: String, v: Array[Array[Option[Int]]], cages: List[SubArea]) =
     val eventualCages = cages.map(a => CurrentCages(a.squares, a.summa)).toList
@@ -29,15 +31,16 @@ class filehandling:
     val result = decode[WholeGame](contents)
 
     // now the result creates a new variable
-    result match {
-        case Left(error) => println(s"Invalid JSON :( $error")
+    result match
+        case Left(error) => //println(s"Invalid JSON :( $error")
+          errorText = s"$error"
         case Right(wholeGame) => val testi = wholeGame.subareas.map( currentCages =>
           new SubArea(currentCages.cells, currentCages.sum))
           areas = testi
           val kokeilu = wholeGame.state.game
           ngrid = kokeilu
           println(kokeilu.flatten.toVector.filter(_.nonEmpty).map( b => b.get))
-      }
+
 
   var areas1 = List[SubArea]()
 
@@ -47,10 +50,10 @@ class filehandling:
     val result = decode[WholeGame](contents)
 
     // now the result creates a new variable
-    result match {
-        case Left(error) => println(s"Invalid JSON :( $error")
+    result match
+        case Left(error) => //println(s"Invalid JSON :( $error")
+          errorText = s"$error"
         case Right(wholeGame) =>
           val testi = wholeGame.subareas.map( currentCages =>
           new SubArea(currentCages.cells, currentCages.sum))
           areas1 = testi
-      }

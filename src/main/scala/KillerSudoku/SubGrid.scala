@@ -1,4 +1,4 @@
-package killer
+package KillerSudoku
 
 import scala.collection.mutable.Buffer
 

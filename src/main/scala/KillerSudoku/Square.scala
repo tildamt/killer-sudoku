@@ -1,6 +1,6 @@
-package killer
+package KillerSudoku
 
-import killer.BigGrid
+import KillerSudoku.BigGrid
 
 class Square(row: Int, col: Int, subGrid: SubGrid, bigGrid: BigGrid):
 

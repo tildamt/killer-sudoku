@@ -1,32 +1,30 @@
-package killer
+package gui
 
-import killer.{BigGrid, CreateGrid, SubArea, filehandling}
-import javafx.beans.property.SimpleStringProperty
-import javafx.scene.text.{Font, FontWeight}
-import scalafx.scene.layout.{BorderPane, FlowPane, GridPane, HBox, Pane}
-import scalafx.application.JFXApp3
-import scalafx.geometry.{Insets, Pos}
-import scalafx.scene.shape.Line
-import scalafx.scene.Scene
-import scalafx.scene.control.{Button, Label, ButtonType, Dialog}
-import scalafx.scene.paint.{Color, Paint}
-import scalafx.scene.input.MouseEvent
-import scalafx.scene.control.*
-import scalafx.Includes.*
-import scalafx.event.ActionEvent
-import scalafx.scene.control.Dialog
-import scalafx.scene.control.ButtonType
-import scalafx.beans.binding.Bindings
-import scalafx.beans.property.StringProperty
-import scalafx.scene.Group
-import scala.collection.mutable.{ArrayBuffer, Buffer}
-import scala.language.postfixOps
-import java.io.File
 import io.circe.*
 import io.circe.generic.auto.*
 import io.circe.parser.*
 import io.circe.syntax.*
+import javafx.beans.property.SimpleStringProperty
+import javafx.scene.input.MouseEvent
+import javafx.scene.layout.VBox
+import KillerSudoku.{BigGrid, FileHandler, SubArea}
+import scalafx.Includes.*
+import scalafx.application.JFXApp3
+import scalafx.beans.binding.Bindings
+import scalafx.beans.property.StringProperty
+import scalafx.event.ActionEvent
+import scalafx.geometry.{Insets, Pos}
+import scalafx.scene.{Group, Scene}
+import scalafx.scene.control.*
+import scalafx.scene.layout.*
+import scalafx.scene.paint.{Color, Paint}
+import scalafx.scene.shape.{Line, Rectangle}
+import scalafx.scene.text.{Font, FontWeight, Text}
+
+import java.io.File
 import scala.collection.mutable
+import scala.collection.mutable.{ArrayBuffer, Buffer}
+import scala.language.postfixOps
 
 
 
@@ -35,7 +33,7 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
   val bGrid = new GridPane()
   var lastPos = Vector[Double]()   // this is to keep track of the last cell that was clicked on
   var theGrid = new BigGrid(9, 9, arr) // I create a new grid to use its methods
-  val ngame = new filehandling // filehandling for saving and beginning a new game
+  val ngame = new FileHandler // filehandling for saving and beginning a new game
 
   def create: Scene =
 
@@ -84,7 +82,7 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
         i <- cages.indices
         j <- i + 1 until cages.length
       do
-        if cages(i).squares.exists(c1 => cages(j).squares.exists(c2 => isAdjacent(c1, c2))) then
+        if cages(i).squares.exists(cell1 => cages(j).squares.exists(cell2 => isAdjacent(cell1, cell2))) then
           val cage1 = cages(i)
           val cage2 = cages(j)
           adjacentCages(cage1).append(cage2)
@@ -97,9 +95,8 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
         j <- 0 until 9
       do
         val square1 =  new Label()
-          square1.setFont(Font.font(15))
-          square1.setMinWidth(50)
-          square1.setMinHeight(50)
+        square1.setMinWidth(50)
+        square1.setMinHeight(50)
 
         bGrid.add(square1, j, i)
 
@@ -109,7 +106,7 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
         subgrids((subgridRow, subgridCol)) += square1
 
         // here i add the sum as an icon for each cage's first cell
-        sumsPlaces.find( kakka => kakka._1 == (j, i)) match
+        sumsPlaces.find( cellsWithSum => cellsWithSum._1 == (j, i)) match
           case Some(value) =>
             val nicetext = new scalafx.scene.text.Text(value._2.toString)
               nicetext.font = Font.font("Comic Sans MS", FontWeight.BOLD, 15)
@@ -117,19 +114,19 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
             square1.graphic = nicetext
           case None =>
 
+        val text = arr(j)(i)
+        text match
+          case Some(value) =>
+            square1.font = Font.font("Comis Sans MS", 15)
+            square1.text = "" + "\n " + value.toString
+          case None =>
 
         // here i add each cell to its cage
         val sijainti = (j, i)
         val location = labelsPlaces.keys.find(_.contains(sijainti)).get
         labelsPlaces(location) += square1
 
-        val texti = arr(j)(i)
-        texti match
-          case Some(value) =>
-            square1.alignment = Pos.TopLeft
-            square1.font = Font.font("Comis Sans MS")
-            square1.text = "" + "\n " + value.toString
-          case None =>
+
 
       // colors is a variable which contains each cage mapped to its style
       var colors = cages.map(area => (area.squares, Buffer[String]()))
@@ -220,6 +217,8 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
       label.text = "Possible combinations"
 
     val flow = new FlowPane()
+    flow.hgap = 5.0
+    flow.vgap = 5.0
     flow.children += label
 
     // In this part, I add the functionality that the numbers that can be placed to the cell that the user is hovering over, are highlighted.
@@ -238,6 +237,8 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
         val rowNumbers = theGrid.getRowNumbers(xLabel)
         val colNumbers = theGrid.getColNumbers(yLabel)
         val subgridNumbers = subgrids.find( (_, b) => b.contains(square)).get._2.filter(_.text.value.nonEmpty).map(_.text.value.last.asDigit).toSet
+
+
         def canAdd(c: Int): Boolean =
           !rowNumbers.contains(Option(c)) &&
             !colNumbers.contains(Option(c)) &&
@@ -323,10 +324,12 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
              cage.get.possibleCombinations
 
 
-        // Changing the labels text
+        // Changing the labels text to show the possible combination when the user is hovering over a cell
         label.font = Font.font("Comic Sans MS")
         label.text = "Possible combinations: " + "\n" + combinations.map(_.mkString(", ")).mkString("\n")
 
+        // when mouse exits the cell, i delete all possible combinations from showing and change the button's background colors
+        // back to normal
         square.onMouseExited = (e: MouseEvent) =>
           label.font = Font.font("Comic Sans MS")
           label.text = "Possible combinations: "
@@ -349,25 +352,22 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
           val text = button.text.value
           for i <- bGrid.getChildren do
             if (i.layoutXProperty().value == lastPos(0)) && (i.layoutYProperty().value == lastPos(1)) then
-              val buttonsText = node.asInstanceOf[javafx.scene.control.Button].text.value
+              val buttonsText = node.asInstanceOf[javafx.scene.control.Button].text.value.last.asDigit
               val label = i.asInstanceOf[javafx.scene.control.Label]
               val labelsCurrentText = label.text.value
               val subgrid = subgrids.find( (a, b) => b.contains(label))
-              val labels = subgrid.get(1).filter(_ != label).filter( x => x.text.value.nonEmpty).map(x => x.text.value.last)
-              println("subgrid's values: " + labels)
-              println("column " + theGrid.getColNumbers((lastPos(1) / 50.0).toInt).mkString("Array(", ", ", ")"))
-              println("row " + theGrid.getRowNumbers((lastPos(0) / 50.0).toInt).mkString("Array(", ", ", ")"))
+              val labels = subgrid.get(1).filter(_ != label).filter( x => x.text.value.nonEmpty).map(x => x.text.value.last.asDigit)
               if
                 !labels.contains(buttonsText)
-                && !theGrid.getColNumbers((lastPos(1) / 50.0).toInt).contains(Option(buttonsText.toInt))
-                && !theGrid.getRowNumbers((lastPos(0) / 50.0).toInt).contains(Some(buttonsText.toInt))
+                && !theGrid.getColNumbers((lastPos(1) / 50.0).toInt).contains(Option(buttonsText))
+                && !theGrid.getRowNumbers((lastPos(0) / 50.0).toInt).contains(Some(buttonsText))
               then
-                theGrid.updateElement((lastPos(0) / 50.0).toInt, (lastPos(1) / 50.0).toInt, Some(buttonsText.toInt)) // updating the element to the grid
+                theGrid.updateElement((lastPos(0) / 50.0).toInt, (lastPos(1) / 50.0).toInt, Some(buttonsText)) // updating the element to the grid
                 label.alignment = Pos.TopLeft
                 label.font = Font.font("Comic Sans MS")
                 label.text =
                       "" + "\n " + buttonsText
-                if theGrid.everyInstanceDone(buttonsText.toInt) then {
+                if theGrid.everyInstanceDone(buttonsText) then {
                   button.disable = true }        // checking if every instance is now done
               else
                 val dialog = new Dialog[Unit]() {
@@ -376,6 +376,7 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
                   dialogPane().buttonTypes = Seq(ButtonType.OK) }  // here i create the error message, which is a dialog
                 dialog.showAndWait()
           lastPos = Vector[Double]()
+
     // When the user is hovering over buttons, the squares with the same number are highlighted. The way this function works is
     // that it first checks the button's text, and saves it to a variable. After this, it filters out the grid's cells whose
     // numbers match that number and changes those cells' colors to be lighter than the other colors. When the mouse exits, the
@@ -473,7 +474,7 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
               dialog2.showAndWait()
           else
             ngame.paikat(value, theGrid.grid, cages)
-            
+
         case None =>
 
     val continueGameButton = new Button("Continue Game")
@@ -499,7 +500,7 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
             }
             dialog1.showAndWait()
           else
-            val ngame = new filehandling
+            val ngame = new FileHandler
             ngame.continue(value)
             val creation = new CreateGrid(this.app, ngame.areas, ngame.ngrid).create
             this.app.stage.scene = creation
@@ -510,10 +511,10 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
     newGameButton.onMouseClicked = (e: MouseEvent) =>
       val directory1 = new File("games") // specify the directory path here
       val files = directory1.listFiles()
-      val filenames = files.map( _.getName.dropRight(5))
+      val filenames1 = files.map( _.getName.dropRight(5))
       val dialog = new TextInputDialog()
       dialog.title = "Enter Name"
-      dialog.headerText = s"Choose a game from the following: ${filenames.mkString(", ")}"
+      dialog.headerText = s"Choose a game from the following: ${filenames1.mkString(", ")}"
       dialog.contentText = "Name:"
       val result = dialog.showAndWait()
       result match
@@ -532,10 +533,10 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
                dialog.showAndWait()
         case None =>
 
+    flow.children += deleteButton
     flow.children += newGameButton
     flow.children += continueGameButton
     flow.children += saveGameButton
-    flow.children += deleteButton
 
   // In this part, I add the lines to separate the sub-grids from each other. Essentially the sub-grids are separated by four lines.
   // I create a new pane, to which I add the lines. Then, I must set each element's mouseTransparent to false. This way, the user's
@@ -574,13 +575,11 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
     lines.foreach( linePane.children.addAll(_))
     linePane.children.map(node => node.asInstanceOf[javafx.scene.shape.Line]).foreach(_.strokeWidth = 3.5)
 
-
     // Changed the borderPane's background color for fun as well. :-)
     // This borderPane has all the elements of the Killer Sudoku now: the label containing the possible combinations, as well
     // as the grid and the candidate numbers. Later on, I'll have to add the file-handling parts.
-    var borderPane = new BorderPane {
-      style = "-fx-background-color: #fff0f5 ; "
-    }
+    var borderPane = new BorderPane()
+
     borderPane.setCenter(bGrid)
     borderPane.setRight(flow)
     borderPane.setBottom(hbox)
