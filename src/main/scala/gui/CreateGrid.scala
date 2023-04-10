@@ -473,7 +473,7 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
             }
               dialog2.showAndWait()
           else
-            ngame.paikat(value, theGrid.grid, cages)
+            ngame.places(value, theGrid.grid, cages)
 
         case None =>
 
