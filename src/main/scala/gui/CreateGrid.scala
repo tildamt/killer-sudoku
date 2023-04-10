@@ -445,8 +445,33 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
 
     val directory = new File("savedgames")
     val files = directory.listFiles()
-    val filenames = files.map( _.getName.dropRight(5))
+    val filenames: Array[String] = files.map( _.getName.dropRight(5))
 
+    // in this part, i create a scrollpane that contains the names of the saved games.
+    // this can be used with the Continue Game -button, when the user enters the name
+    // of the game they wish to continue.
+    val scroll = new ScrollPane()
+    val text = new Text(s"${filenames.mkString(", ")}")
+    text.mouseTransparent = false
+    scroll.setContent(text)
+    scroll.mouseTransparent = false
+     val pane = new DialogPane()
+        pane.content = scroll
+        val tfield = new TextField()
+        tfield.text = ""
+     val bPane = new BorderPane()
+     bPane.setTop(Text("Write the name of the game you'd like to continue"))
+     bPane.setCenter(scroll)
+     bPane.setBottom(tfield)
+     pane.content = bPane
+     pane.buttonTypes = Seq(ButtonType.OK, ButtonType.Close)
+     pane.prefWidth = 100
+     pane.prefHeight = 100
+
+    // With this button, the user may save the progress they currently have. They must
+    // choose a name for the file to save, and it's then stored to savedgames. This
+    // handles error cases where user does not enter a name, or tries to name the progress
+    // the same name as a previous one.
     val saveGameButton = new Button("Save Game")
     saveGameButton.font = Font.font("Comic Sans MS")
     saveGameButton.onMouseClicked = (e: MouseEvent) =>
@@ -457,7 +482,6 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
       val result = dialog.showAndWait()
       result match
         case Some(value) =>
-          //val res = result.get
           if (value.isEmpty) then
             val dialog1 = new Dialog[Unit]() {
               title = "Error"
@@ -468,8 +492,18 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
           else if filenames.contains(value) then
               val dialog2 = new Dialog[Unit]() {
               title = "Error"
-              contentText = s"This file already exists. \nYou have already saved these games:\n${filenames.mkString(", ")}. \nPlease, try again."
-              dialogPane().buttonTypes = Seq(ButtonType.OK)
+              val ndialogpane = new DialogPane()
+              val boPane = new BorderPane()
+              boPane.setTop(new Text("You have already saved a game with the following names:"))
+              boPane.setCenter(scroll)
+              boPane.setBottom(new Text("Please, try again."))
+              ndialogpane.buttonTypes = Seq(ButtonType.OK)
+              ndialogpane.content = boPane
+              ndialogpane.prefWidth = 100
+              ndialogpane.prefHeight = 100
+              dialogPane = ndialogpane
+              resizable = true
+
             }
               dialog2.showAndWait()
           else
@@ -477,35 +511,53 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
 
         case None =>
 
+    // With this button, the user may continue their previous progress.
+    // This also handles the error case when the user tries to select a game that doesn't exist.
+    // The program then lets the user know that an error has occurred.
     val continueGameButton = new Button("Continue Game")
     continueGameButton.font = Font.font("Comic Sans MS")
 
     continueGameButton.onMouseClicked = (e: MouseEvent) =>
       val dialog = new TextInputDialog()
+      dialog.dialogPane = pane
+      dialog.resizable = true
       dialog.title = "Continue Game"
-      dialog.headerText = s"Please choose a game to continue from the following: \n${filenames.mkString(", ")}"
-      dialog.contentText = "Game:"
+      dialog.dialogPane()
       val result = dialog.showAndWait()
       result match
         case Some(value) =>
-          if value.isEmpty || !filenames.contains(value) then
+          if !filenames.contains(tfield.text.value) then
             val directory = new File("savedgames")
             val files = directory.listFiles()
             val filenames = files.map( _.getName.dropRight(5))
             println("file names: " + filenames.mkString("Array(", ", ", ")"))
             val dialog1 = new Dialog[Unit]() {
               title = "Error"
-              contentText = s"No such a game was found. Please, try again and choose one from the following: ${filenames.mkString(", ")}"
+              val ndialogpane = new DialogPane()
+              val boPane = new BorderPane()
+              boPane.setTop(new Text("Such a game doesn't exist. You have already saved these games:"))
+              boPane.setCenter(scroll)
+              boPane.setBottom(new Text("Please, try again."))
+              ndialogpane.buttonTypes = Seq(ButtonType.OK)
+              ndialogpane.content = boPane
+              ndialogpane.prefWidth = 100
+              ndialogpane.prefHeight = 100
+              dialogPane = ndialogpane
+              resizable = true
               dialogPane().buttonTypes = Seq(ButtonType.OK)
             }
             dialog1.showAndWait()
           else
             val ngame = new FileHandler
-            ngame.continue(value)
+            ngame.continue(tfield.text.value)
             val creation = new CreateGrid(this.app, ngame.areas, ngame.ngrid).create
             this.app.stage.scene = creation
         case None =>
 
+    // With this button, the user may start a new game by choosing from one of the options. Note
+    // that they can always add new games by saving them into directory "games" in the correct format.
+    // This handles the error case in which the user may type the name wrong or nothing at all. This
+    // means that the program sends the user an error message letting them know what went wrong.
     val newGameButton = new Button("New Game")
     newGameButton.font = Font.font("Comic Sans MS")
     newGameButton.onMouseClicked = (e: MouseEvent) =>
@@ -514,7 +566,7 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
       val filenames1 = files.map( _.getName.dropRight(5))
       val dialog = new TextInputDialog()
       dialog.title = "Enter Name"
-      dialog.headerText = s"Choose a game from the following: ${filenames1.mkString(", ")}"
+      dialog.headerText = s"Choose a game from the following: \n${filenames1.mkString(", ")}"
       dialog.contentText = "Name:"
       val result = dialog.showAndWait()
       result match
