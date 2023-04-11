@@ -1,7 +1,6 @@
 package KillerSudoku
 
 import scala.collection.mutable.Buffer
-import KillerSudoku.Square
 
 class BigGrid(rows: Int, cols: Int, squares: Array[Array[Option[Int]]]):
 
