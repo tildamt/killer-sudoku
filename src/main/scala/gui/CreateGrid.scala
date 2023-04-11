@@ -33,25 +33,30 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
   val bGrid = new GridPane()
   var lastPos = Vector[Double]()   // this is to keep track of the last cell that was clicked on
   var theGrid = new BigGrid(9, 9, arr) // I create a new grid to use its methods
-  val ngame = new FileHandler // filehandling for saving and beginning a new game
+  val filehandler = new FileHandler // filehandling for saving and beginning a new game
 
   def create: Scene =
 
+    // On the page https://stackoverflow.com/questions/4718213/dividing-a-9x9-2d-array-into-9-sub-grids-like-in-sudoku-c
+    // [read 11.4.2023] it is explained how the subgrids on the sudoku can be assigned to numbers from 0-8, which is what
+    // I chose to use in my program, because you only really need subgrids to check which numbers have already been placed
+    // there.
     val subgrids = Map(
-        (0,0) -> new mutable.ArrayBuffer[Label](),
-        (0,3) -> new mutable.ArrayBuffer[Label](),
-        (0,6) -> new mutable.ArrayBuffer[Label](),
-        (3,0) -> new mutable.ArrayBuffer[Label](),
-        (3,3) -> new mutable.ArrayBuffer[Label](),
-        (3,6) -> new mutable.ArrayBuffer[Label](),
-        (6,0) -> new mutable.ArrayBuffer[Label](),
-        (6,3) -> new mutable.ArrayBuffer[Label](),
-        (6,6) -> new mutable.ArrayBuffer[Label]()
+        0 -> new mutable.ArrayBuffer[Label](),
+        1 -> new mutable.ArrayBuffer[Label](),
+        2 -> new mutable.ArrayBuffer[Label](),
+        3 -> new mutable.ArrayBuffer[Label](),
+        4 -> new mutable.ArrayBuffer[Label](),
+        5 -> new mutable.ArrayBuffer[Label](),
+        6 -> new mutable.ArrayBuffer[Label](),
+        7 -> new mutable.ArrayBuffer[Label](),
+        8 -> new mutable.ArrayBuffer[Label]()
       )
 
     // i create a new list that all of the labels will be added to, and they will now be in their correct cages
     val labelsPlaces = cages.map( area => area.squares).map( lista => lista.toBuffer)
         .map( lista => lista -> new mutable.ArrayBuffer[Label]()).toMap
+
     // in the variable sumsPlaces, I map each cage's first element to the cage's sum to reach. i use this later
     // to add the sum to the label that is at that first position
     val sumsPlaces = cages.map( subarea => subarea.squares.head -> subarea.summa)
@@ -100,20 +105,24 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
 
         bGrid.add(square1, j, i)
 
+        //int block = (row/3)*3 + (col/3);
         // here i add the label to the subgrid
         val subgridRow = i / 3 * 3
         val subgridCol = j / 3 * 3
-        subgrids((subgridRow, subgridCol)) += square1
+        subgrids((i/3)*3 + (j/3)) += square1
 
         // here i add the sum as an icon for each cage's first cell
         sumsPlaces.find( cellsWithSum => cellsWithSum._1 == (j, i)) match
           case Some(value) =>
             val nicetext = new scalafx.scene.text.Text(value._2.toString)
-              nicetext.font = Font.font("Comic Sans MS", FontWeight.BOLD, 15)
+              nicetext.font = Font.font("Comic Sans MS", FontWeight.Bold, 15)
             square1.alignment = Pos.TopLeft
             square1.graphic = nicetext
           case None =>
 
+        // when the user continues an old game, I use the variable arr to check which numbers
+        // they had already placed there. In the case the game is completely new and they haven't
+        // started it earlier, these will always be none.
         val text = arr(j)(i)
         text match
           case Some(value) =>
@@ -198,7 +207,8 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
       number = number + 1
 
     // In this part, I loop over bGrid's children (essentially the squares or cells), and when the user clicks on
-    // the square, its position on the grid is saved into a variable called lastPos.
+    // the square, its position on the grid is saved into a variable called lastPos. This can be used when adding a
+    // number to a cell, or deleting a number.
     for (node <- bGrid.children) do
       val xPos = node.layoutXProperty().value
       val yPos = node.layoutYProperty().value
@@ -206,7 +216,8 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
         lastPos = Vector(node.layoutXProperty().value, node.layoutYProperty().value)
         println("clicked: " + (node.layoutXProperty().value, node.layoutYProperty().value))
 
-    // this label is created for showing the possible combinations. it is added to the flowpane, which is later added to the borderPane.
+    // this label is created for showing the possible combinations. it is added to the flowpane, which is later added to the borderPane,
+    // which holds all the elements to make the killer sudoku.
     val label = new Label
       label.alignment = scalafx.geometry.Pos.TopLeft
       label.setMinWidth(400)
@@ -216,6 +227,8 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
       label.font = Font.font("Comic Sans MS")
       label.text = "Possible combinations"
 
+    // this flowpane holds the elements such as possible combinations -label, and the buttons
+    // the user can press to delete a number, start a new game, continue an old game etc.
     val flow = new FlowPane()
     flow.hgap = 5.0
     flow.vgap = 5.0
@@ -243,6 +256,7 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
           !rowNumbers.contains(Option(c)) &&
             !colNumbers.contains(Option(c)) &&
             !subgridNumbers.contains(c)
+
         hbox.getChildren
           .toVector
           .map(a => a.asInstanceOf[javafx.scene.control.Button])
@@ -260,9 +274,9 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
           bGrid.children
             .map(node => node.asInstanceOf[javafx.scene.control.Label])
             .map(a => a -> ((a.layoutXProperty().value / 50.0).toInt, (a.layoutYProperty().value / 50.0).toInt))
-            .filter( (lappu, sijainti: (Int, Int)) => cage.get.squares.contains(sijainti))
-            .filter( (lappu: javafx.scene.control.Label, sijainti) => lappu.text.value != "")
-            .map( (lappu: javafx.scene.control.Label, sijainti) => lappu.text.value.last.asDigit).toVector
+            .filter( (label, location: (Int, Int)) => cage.get.squares.contains(location))
+            .filter( (label: javafx.scene.control.Label, location) => label.text.value != "")
+            .map( (label: javafx.scene.control.Label, location) => label.text.value.last.asDigit).toVector
 
         // current sum of the numbers in the cage
         val currentSum = labelsnumbers.sum
@@ -279,38 +293,6 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
             .map(a => a -> ((a.layoutXProperty().value / 50.0).toInt, (a.layoutYProperty().value / 50.0).toInt))
             .filter( (lappu, sijainti: (Int, Int)) => cage.get.squares.contains(sijainti))
             .map( (lappu, sijainti) => lappu)
-
-
-        //println("pylly " + cage.map( area => area.squares).get.map( first => theGrid.getRowNumbers(first._1)))
-        for i <- cage do
-          for cell <- i.squares do
-            val rows = theGrid.getRowNumbers(cell._1)
-            val cols = theGrid.getColNumbers(cell._2)
-        // this variable gets us all the numbers in the subgrids the cage belongs to
-        val subs: Map[(Int, Int), scala.collection.mutable.ArrayBuffer[Int]] =
-          subgrids
-            .filter( (numero, laput) => laput.toSeq.intersect(labelsInCage.toSeq).nonEmpty)
-            .map( (numero, laput) => (numero, laput.filter(_.text.value != "")))
-            .map( (numero, laput) => (numero, laput.map(_.text.value.last.asDigit)))
-
-        for i <- cage do
-          for cell <- i.squares do
-            val rows = theGrid.getRowNumbers(cell._1)
-            val cols = theGrid.getColNumbers(cell._2)
-            //val subsnumbers =
-        //println("subien arvot: " + subs.values.flatten)
-        def possible(n: Int): Boolean =
-          // yhdistelmä on mahdollinen, jos numero esiintyy maksimissaan subgridien määrä - 1 kertaa subgrideissä
-          subs.values.flatten.toVector.count( _ == n) <= subs.keys.size - 1
-
-        val subgridsnumbers = subs.values.flatten.toVector
-        val possiblenumbers = (1 to 9).filter( n => !labelsnumbers.contains(n)).filter(n => !subgridsnumbers.contains(n))
-
-        // i get the possible combinations here, and then filter already placed numbers from those
-
-        val cell = square.asInstanceOf[javafx.scene.control.Label]
-        val cellsText: Option[Int] =
-            cell.text.value.toIntOption
 
         // filtteröi ne yhdistelmät, että asetettu numero sisältyy niihin
         val combinations =
@@ -350,8 +332,10 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
         if lastPos.nonEmpty then
           val button = node.asInstanceOf[javafx.scene.control.Button]
           val text = button.text.value
+          val row = lastPos(0)
+          val column = lastPos(1)
           for i <- bGrid.getChildren do
-            if (i.layoutXProperty().value == lastPos(0)) && (i.layoutYProperty().value == lastPos(1)) then
+            if (i.layoutXProperty().value == row) && (i.layoutYProperty().value == column) then
               val buttonsText = node.asInstanceOf[javafx.scene.control.Button].text.value.last.asDigit
               val label = i.asInstanceOf[javafx.scene.control.Label]
               val labelsCurrentText = label.text.value
@@ -359,10 +343,10 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
               val labels = subgrid.get(1).filter(_ != label).filter( x => x.text.value.nonEmpty).map(x => x.text.value.last.asDigit)
               if
                 !labels.contains(buttonsText)
-                && !theGrid.getColNumbers((lastPos(1) / 50.0).toInt).contains(Option(buttonsText))
-                && !theGrid.getRowNumbers((lastPos(0) / 50.0).toInt).contains(Some(buttonsText))
+                && !theGrid.getColNumbers((column / 50.0).toInt).contains(Some(buttonsText))
+                && !theGrid.getRowNumbers((row / 50.0).toInt).contains(Some(buttonsText))
               then
-                theGrid.updateElement((lastPos(0) / 50.0).toInt, (lastPos(1) / 50.0).toInt, Some(buttonsText)) // updating the element to the grid
+                theGrid.updateElement((row / 50.0).toInt, (column / 50.0).toInt, Some(buttonsText)) // updating the element to the grid
                 label.alignment = Pos.TopLeft
                 label.font = Font.font("Comic Sans MS")
                 label.text =
@@ -381,9 +365,9 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
     // that it first checks the button's text, and saves it to a variable. After this, it filters out the grid's cells whose
     // numbers match that number and changes those cells' colors to be lighter than the other colors. When the mouse exits, the
     // previous style is from the labels' userData which I set earlier in the code.
-    for nappi <- hbox.children do
-      nappi.onMouseEntered = (e: MouseEvent) =>
-        val butt = nappi.asInstanceOf[javafx.scene.control.Button]
+    for button <- hbox.children do
+      button.onMouseEntered = (e: MouseEvent) =>
+        val butt = button.asInstanceOf[javafx.scene.control.Button]
         val number = butt.text.value
         bGrid.children
           .map( b => b.asInstanceOf[javafx.scene.control.Label])
@@ -391,7 +375,7 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
           .filter( b => b.text.value.last.toString == number)
           .foreach( (b: javafx.scene.control.Label) =>
             b.style = "-fx-border-color: black; -fx-background-color: #f0f8ff; ")
-      nappi.onMouseExited = (e: MouseEvent) =>
+      button.onMouseExited = (e: MouseEvent) =>
         bGrid.children
         .map( b => b.asInstanceOf[javafx.scene.control.Label])
           .foreach( (lappu: javafx.scene.control.Label) =>
@@ -443,6 +427,9 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
              dialogPane().buttonTypes = Seq(ButtonType.OK) }
              dialog.showAndWait()
 
+    // These are used for checking the current saved games later on with the Continue Game -button.
+    // In the filenames variable, as the name suggests, I get the names of the files and drop the ends
+    // .json so it's more convenient for the user to continue their game.
     val directory = new File("savedgames")
     val files = directory.listFiles()
     val filenames: Array[String] = files.map( _.getName.dropRight(5))
@@ -471,7 +458,8 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
     // With this button, the user may save the progress they currently have. They must
     // choose a name for the file to save, and it's then stored to savedgames. This
     // handles error cases where user does not enter a name, or tries to name the progress
-    // the same name as a previous one.
+    // the same name as a previous one. when the user saves a game, i make sure that the name will end in .json
+    // no matter the input!
     val saveGameButton = new Button("Save Game")
     saveGameButton.font = Font.font("Comic Sans MS")
     saveGameButton.onMouseClicked = (e: MouseEvent) =>
@@ -507,7 +495,7 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
             }
               dialog2.showAndWait()
           else
-            ngame.places(value, theGrid.grid, cages)
+            filehandler.places(value, theGrid.grid, cages)
 
         case None =>
 
@@ -562,8 +550,8 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
     newGameButton.font = Font.font("Comic Sans MS")
     newGameButton.onMouseClicked = (e: MouseEvent) =>
       val directory1 = new File("games") // specify the directory path here
-      val files = directory1.listFiles()
-      val filenames1 = files.map( _.getName.dropRight(5))
+      val files1 = directory1.listFiles()
+      val filenames1 = files1.map( _.getName.dropRight(5))
       val dialog = new TextInputDialog()
       dialog.title = "Enter Name"
       dialog.headerText = s"Choose a game from the following: \n${filenames1.mkString(", ")}"
@@ -574,13 +562,13 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
           val fileName = s"${value}.json"
           val file = new File(directory1, fileName)
           if (file.exists()) then
-            ngame.newgame(result.get)
-            val creation = new CreateGrid(this.app, ngame.areas1, Array.fill[Option[Int]](9, 9)(None)).create
+            filehandler.newgame(result.get)
+            val creation = new CreateGrid(this.app, filehandler.areas1, Array.fill[Option[Int]](9, 9)(None)).create
             this.app.stage.scene = creation
           else
             val dialog = new Dialog[Unit]() {
                title = "Error"
-               contentText = s"The game you selected doesn't exist. Press the button again and choose one of these options: ${filenames.mkString(", ")}"
+               contentText = s"The game you selected doesn't exist. Press the button again and choose one of these options: ${filenames1.mkString(", ")}"
                dialogPane().buttonTypes = Seq(ButtonType.OK) }
                dialog.showAndWait()
         case None =>
