@@ -8,6 +8,7 @@ import javafx.beans.property.SimpleStringProperty
 import javafx.scene.input.MouseEvent
 import javafx.scene.layout.VBox
 import KillerSudoku.{BigGrid, FileHandler, SubArea}
+import javafx.stage.WindowEvent
 import scalafx.Includes.*
 import scalafx.application.JFXApp3
 import scalafx.beans.binding.Bindings
@@ -30,10 +31,14 @@ import scala.language.postfixOps
 
 class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Option[Int]]]):
 
+  var continuedCages = List[SubArea]()
+  var continuedGrid = List[SubArea]()
   val bGrid = new GridPane()
   var lastPos = Vector[Double]()   // this is to keep track of the last cell that was clicked on
   var theGrid = new BigGrid(9, 9, arr) // I create a new grid to use its methods
   val filehandler = new FileHandler // filehandling for saving and beginning a new game
+  val expectedValues = (0 until 9).flatMap(i => (0 until 9).map(j => (i, j))).toSeq
+
 
   def create: Scene =
 
@@ -52,6 +57,9 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
         7 -> new mutable.ArrayBuffer[Label](),
         8 -> new mutable.ArrayBuffer[Label]()
       )
+
+    val cagesPlaces = cages.flatMap(cage => cage.squares).toSeq
+    val missingPlaces = cagesPlaces.filter( a => !cagesPlaces.contains(a))
 
     // i create a new list that all of the labels will be added to, and they will now be in their correct cages
     val labelsPlaces = cages.map( area => area.squares).map( lista => lista.toBuffer)
@@ -105,10 +113,7 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
 
         bGrid.add(square1, j, i)
 
-        //int block = (row/3)*3 + (col/3);
         // here i add the label to the subgrid
-        val subgridRow = i / 3 * 3
-        val subgridCol = j / 3 * 3
         subgrids((i/3)*3 + (j/3)) += square1
 
         // here i add the sum as an icon for each cage's first cell
@@ -136,7 +141,6 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
         labelsPlaces(location) += square1
 
 
-
       // colors is a variable which contains each cage mapped to its style
       var colors = cages.map(area => (area.squares, Buffer[String]()))
       // adjacentslist contains all the adjacent cages for each cage
@@ -145,16 +149,16 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
       // These are the styles ( I will move them later on). This works if at most one cage has ten adjacent cages, so it
       // isn't usable for every killer sudoku and thus must be modified.
       val styles = Vector(
-          "#f9a875",
-          "#a3e7d8",
-          "#fdd369",
-          "#d46a6a",
-          "#b983e9",
-          "#8bc995",
-          "#f49cc3",
-          "#77c9d4",
-          "#f1b8b8",
-          "#a5c5e9"
+          "#f9a875", // soft orange
+          "#a3e7d8", // very soft cyan
+          "#fdd369", // soft orange, different from the first one though
+          "#d46a6a", // moderate red
+          "#b983e9", // very soft violet
+          "#8bc995", // slightly desaturated lime green
+          "#f49cc3", // very soft pink
+          "#77c9d4", // slightly desaturated cyan
+          "#f1b8b8", // very soft red
+          "#a5c5e9"  // very soft blue
       )
 
       // Here i choose colors based on the adjacent cages colors. I loop over the colors buffer, which contains each cage
@@ -223,8 +227,7 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
       label.setMinWidth(400)
       label.setMinHeight(300)
       label.style = "-fx-border-color: black; -fx-background-color: #e6e6fa; "
-      label.font = Font.font(25)
-      label.font = Font.font("Comic Sans MS")
+      label.font = Font.font("Comic Sans MS", 20)
       label.text = "Possible combinations"
 
     // this flowpane holds the elements such as possible combinations -label, and the buttons
@@ -250,7 +253,6 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
         val rowNumbers = theGrid.getRowNumbers(xLabel)
         val colNumbers = theGrid.getColNumbers(yLabel)
         val subgridNumbers = subgrids.find( (_, b) => b.contains(square)).get._2.filter(_.text.value.nonEmpty).map(_.text.value.last.asDigit).toSet
-
 
         def canAdd(c: Int): Boolean =
           !rowNumbers.contains(Option(c)) &&
@@ -278,22 +280,6 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
             .filter( (label: javafx.scene.control.Label, location) => label.text.value != "")
             .map( (label: javafx.scene.control.Label, location) => label.text.value.last.asDigit).toVector
 
-        // current sum of the numbers in the cage
-        val currentSum = labelsnumbers.sum
-       // println("curr
-        val originalsum = cage.get.summa
-        val npossibilities = originalsum - currentSum
-        val ncombs =
-          (1 to 9).toSeq.combinations(cage.get.squares.size).toSeq.filter( _.sum == npossibilities).filter( sek => sek.intersect(cage.get.possibleCombinations).nonEmpty)
-
-        // all the labels in a cage
-        val labelsInCage: scalafx.collections.ObservableBuffer[(javafx.scene.control.Label)] =
-          bGrid.children
-            .map(node => node.asInstanceOf[javafx.scene.control.Label])
-            .map(a => a -> ((a.layoutXProperty().value / 50.0).toInt, (a.layoutYProperty().value / 50.0).toInt))
-            .filter( (lappu, sijainti: (Int, Int)) => cage.get.squares.contains(sijainti))
-            .map( (lappu, sijainti) => lappu)
-
         // filtteröi ne yhdistelmät, että asetettu numero sisältyy niihin
         val combinations =
           if labelsnumbers.nonEmpty then
@@ -307,13 +293,13 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
 
 
         // Changing the labels text to show the possible combination when the user is hovering over a cell
-        label.font = Font.font("Comic Sans MS")
+        label.font = Font.font("Comic Sans MS", 20)
         label.text = "Possible combinations: " + "\n" + combinations.map(_.mkString(", ")).mkString("\n")
 
         // when mouse exits the cell, i delete all possible combinations from showing and change the button's background colors
         // back to normal
         square.onMouseExited = (e: MouseEvent) =>
-          label.font = Font.font("Comic Sans MS")
+          label.font = Font.font("Comic Sans MS", 20)
           label.text = "Possible combinations: "
            hbox.getChildren
           .toVector
@@ -536,9 +522,8 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
             }
             dialog1.showAndWait()
           else
-            val ngame = new FileHandler
-            ngame.continue(tfield.text.value)
-            val creation = new CreateGrid(this.app, ngame.areas, ngame.ngrid).create
+            filehandler.continue(tfield.text.value)
+            val creation = new CreateGrid(this.app, filehandler.areas, filehandler.ngrid).create
             this.app.stage.scene = creation
         case None =>
 
@@ -627,5 +612,25 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
     // I create a new group that holds both the borderPane and the linePane. This way, the linePane will be on top of the
     // borderPane, so the lines are visible.
     val group = new Group(borderPane, linePane)
+    
+    this.app.stage.onCloseRequest = (e: WindowEvent) =>
+      val time = java.util.Calendar.getInstance(java.util.TimeZone.getTimeZone("Europe/Helsinki"))
+      val day = time.get(java.util.Calendar.DAY_OF_MONTH)
+      val year = time.get(java.util.Calendar.YEAR)
+      val month = time.get(java.util.Calendar.MONTH)
+      val hour = time.get(java.util.Calendar.HOUR_OF_DAY)
+      val minute = time.get(java.util.Calendar.MINUTE)
+      val second = time.get(java.util.Calendar.SECOND)
+      filehandler.places(s"${day}-${month}-${year} at ${hour}-${minute}-${second}", theGrid.grid, cages)
 
     new Scene(group)
+
+  /*def closer() =
+    val time = java.util.Calendar.getInstance(java.util.TimeZone.getTimeZone("Europe/Helsinki"))
+    val day = time.get(java.util.Calendar.DAY_OF_MONTH)
+    val year = time.get(java.util.Calendar.YEAR)
+    val month = time.get(java.util.Calendar.MONTH)
+    val hour = time.get(java.util.Calendar.HOUR_OF_DAY)
+    val minute = time.get(java.util.Calendar.MINUTE)
+    val second = time.get(java.util.Calendar.SECOND)
+    filehandler.places(s"${day}-${month}-${year} at ${hour}-${minute}-${second}", theGrid.grid, cages)*/

@@ -21,7 +21,7 @@ class FileHandler:
   // v representing the current elements on the grid, and cages representing the cages
   // on the grid. Then it writes all this information to a new file. This method can
   // also be used when the user exits the app.
-  def places(n: String, v: Array[Array[Option[Int]]], cages: List[SubArea]) =
+  def places(n: String, v: Array[Array[Option[Int]]], cages: List[SubArea]): Unit =
     val eventualCages = cages.map(a => CurrentCages(a.squares, a.summa)).toList
     val gameState = GameState(v)
     val bothStateAndCages = WholeGame(gameState, eventualCages)
@@ -39,12 +39,12 @@ class FileHandler:
   // called contents. Then, I decode the elements as taught on this page: https://circe.github.io/circe/codec.html
   // [read 8.4.2023]. I then use that result to change the areas and ngrid variables, so I can retrieve them and use
   // them to create the same grid as the one from the previous progress.
-  def continue(s: String) =
+  def continue(s: String): Unit =
     val contents = new String(Files.readAllBytes(Paths.get(s"savedgames/${s}.json")))
     val result = decode[WholeGame](contents)
     // now the result creates a new variable
     result match
-        case Left(error) => //println(s"Invalid JSON :( $error")
+        case Left(error) => println(s"Invalid JSON, error: $error")
           errorText = s"$error"
         case Right(wholeGame) => val newcages = wholeGame.subareas.map( currentCages =>
           new SubArea(currentCages.cells, currentCages.sum))
@@ -59,13 +59,13 @@ class FileHandler:
   // part. The reason that these methods are separated is that it is easier for me to use them. In both
   // methods, I read from files as taught on this page: https://attacomsian.com/blog/java-files-readallbytes-example?utm_content=cmp-true
   // [read 8.4.2023]. Then I create a string for the decode-method.
-  def newgame(s: String) =
+  def newgame(s: String): Unit =
     val contents = new String(Files.readAllBytes(Paths.get(s"games/${s}.json")))
     val result = decode[WholeGame](contents)
 
     // now the result creates a new variable
     result match
-        case Left(error) => //println(s"Invalid JSON :( $error")
+        case Left(error) => println(s"Invalid JSON, error: $error")
           errorText = s"$error"
         case Right(wholeGame) =>
           val newcages = wholeGame.subareas.map( currentCages =>
