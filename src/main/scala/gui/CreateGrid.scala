@@ -306,10 +306,8 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
         val combinations =
           if labelsnumbers.nonEmpty then
             cage.get.possibleCombinations
-              //.filter( sek => sek.intersect(labelsnumbers).nonEmpty)
               .filter( sek => labelsnumbers.forall(b => sek.contains(b)))
               .map( (a: IndexedSeq[Int]) => a.filter( !labelsnumbers.contains(_)))
-              .map( a => a.filter(canAdd(_)))
           else
              cage.get.possibleCombinations
 
