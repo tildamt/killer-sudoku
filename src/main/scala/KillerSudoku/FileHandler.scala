@@ -1,8 +1,15 @@
 package KillerSudoku
 
-import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._
+import io.circe.*
+import io.circe.generic.auto.*
+import io.circe.parser.*
+import io.circe.syntax.*
 import KillerSudoku.SubArea
-import java.nio.file.{Paths, Files}
+import scalafx.scene.control.{ButtonType, Dialog}
+import scalafx.Includes.jfxDialogPane2sfx
+import scalafx.scene.SceneIncludes.jfxDialogPane2sfx
+import scalafx.scene.control.ControlIncludes.jfxDialogPane2sfx
+import java.nio.file.{Files, Paths}
 
 class FileHandler:
 
@@ -14,7 +21,6 @@ class FileHandler:
   case class CurrentCages(cells: List[(Int, Int)], sum: Int)
   case class WholeGame(state: GameState, subareas: List[CurrentCages])
 
-  var errorText = ""
 
   // This method is used when the user clicks on the Save Game -button. This method
   // takes three parameters: n representing the name of the new file being created,
@@ -44,8 +50,13 @@ class FileHandler:
     val result = decode[WholeGame](contents)
     // now the result creates a new variable
     result match
-        case Left(error) => println(s"Invalid JSON, error: $error")
-          errorText = s"$error"
+        case Left(error) =>
+          val dialog = new Dialog[Unit]() {
+            title = "Error"
+            contentText = s"Invalid JSON, error: ${error.getMessage}"
+            dialogPane().buttonTypes = Seq(ButtonType.OK)
+          }
+          dialog.showAndWait()
         case Right(wholeGame) => val newcages = wholeGame.subareas.map( currentCages =>
           new SubArea(currentCages.cells, currentCages.sum))
           areas = newcages
@@ -65,8 +76,13 @@ class FileHandler:
 
     // now the result creates a new variable
     result match
-        case Left(error) => println(s"Invalid JSON, error: $error")
-          errorText = s"$error"
+        case Left(error) =>
+          val dialog = new Dialog[Unit]() {
+            title = "Error"
+            contentText = s"Invalid JSON, error: ${error.getMessage}"
+            dialogPane().buttonTypes = Seq(ButtonType.OK)
+          }
+          dialog.showAndWait()
         case Right(wholeGame) =>
           val newcages = wholeGame.subareas.map( currentCages =>
           new SubArea(currentCages.cells, currentCages.sum))
