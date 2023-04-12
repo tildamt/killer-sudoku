@@ -25,6 +25,7 @@ import scalafx.scene.text.{Font, FontWeight, Text}
 import java.io.File
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, Buffer}
+import scala.io.Source
 import scala.language.postfixOps
 
 
@@ -125,6 +126,7 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
             square1.graphic = nicetext
           case None =>
 
+
         // when the user continues an old game, I use the variable arr to check which numbers
         // they had already placed there. In the case the game is completely new and they haven't
         // started it earlier, these will always be none.
@@ -137,8 +139,17 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
 
         // here i add each cell to its cage
         val sijainti = (j, i)
-        val location = labelsPlaces.keys.find(_.contains(sijainti)).get
-        labelsPlaces(location) += square1
+        val location = labelsPlaces.keys.find(_.contains(sijainti))
+        location match
+          case Some(value) =>
+            labelsPlaces(value) += square1
+          case None =>
+            val dialog = new Dialog[Unit]() {
+               title = "Error"
+               contentText = s"A label without a cage was found at ${sijainti}. There must be an error in the file somewhere."
+               dialogPane().buttonTypes = Seq(ButtonType.OK) }
+               dialog.showAndWait()
+            throw new ErrorMessage(s"A label without a cage was found at ${sijainti}.")
 
 
       // colors is a variable which contains each cage mapped to its style
@@ -169,6 +180,7 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
       // and always take the first one out of those possible colors. This way, I think the least number of colors will be used. Then,
       // I append that color to its cage in the colors buffer above. So, basically, for each cage, I assign a color that isn't used for its
       // adjacent cage.
+
       var index = 0
       while index < colors.size do
         val current = colors(index)._1
@@ -179,7 +191,17 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
             val usedcolor = colors.filter(cage => cage._1 == one).map( cage => cage._2)
             usedcolor.foreach( used => used.foreach(currentColorsUsed.append(_)))
         val possibles = styles.filter(!currentColorsUsed.contains(_))
-        colors(index)._2.append(possibles.head)
+        try
+          colors(index)._2.append(possibles.head)
+        catch
+          case e: Exception =>
+            val dialog = new Dialog[Unit]() {
+              title = "Error"
+              contentText = s"Too many adjacent cages for one cage. The cage includes cells at the following positions: ${current}."
+              dialogPane().buttonTypes = Seq(ButtonType.OK)
+            }
+            dialog.showAndWait()
+            throw ErrorMessage(s"Too many adjacent cages for one cage. The cage includes cells at the following positions: ${current}.")
         index += 1
 
       // In this part, I set each label's (=cell's) style to be the one I assigned to it earlier with the algorithm.
@@ -624,13 +646,3 @@ class CreateGrid(app: JFXApp3, val cages: List[SubArea], var arr: Array[Array[Op
       filehandler.places(s"${day}-${month}-${year} at ${hour}-${minute}-${second}", theGrid.grid, cages)
 
     new Scene(group)
-
-  /*def closer() =
-    val time = java.util.Calendar.getInstance(java.util.TimeZone.getTimeZone("Europe/Helsinki"))
-    val day = time.get(java.util.Calendar.DAY_OF_MONTH)
-    val year = time.get(java.util.Calendar.YEAR)
-    val month = time.get(java.util.Calendar.MONTH)
-    val hour = time.get(java.util.Calendar.HOUR_OF_DAY)
-    val minute = time.get(java.util.Calendar.MINUTE)
-    val second = time.get(java.util.Calendar.SECOND)
-    filehandler.places(s"${day}-${month}-${year} at ${hour}-${minute}-${second}", theGrid.grid, cages)*/
