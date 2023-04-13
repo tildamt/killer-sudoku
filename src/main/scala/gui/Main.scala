@@ -18,8 +18,8 @@ object Main extends JFXApp3 :
     // continuing an old game or choosing a new game.
     val gamecreator = new FileHandler
     gamecreator.newgame("game1") // standard is game1, but this changeable
-    val creator = new CreateGrid(this, gamecreator.areas1, Array.fill[Option[Int]](9, 9)(None))
-    val creation = creator.create // creating a new scene with the class CreateGrid's create method
+    val creator = new CreateGame(this, gamecreator.areas1, Array.fill[Option[Int]](9, 9)(None))
+    val creation = creator.create // creating a new scene with the class CreateGame's create method
     val scene = creation // Scene acts as a container for the scene graph
     stage.scene = scene // Assigning the new scene as the current scene for the stage
 
