@@ -50,3 +50,6 @@ is just the numbers already on the grid and the cages I can get from the interne
 on this project for this last part of the project, since other courses have fewer deadlines. However, I think
 my progress is looking good over all since the main functions are working with the GUI now (aside from the cages).
 
+FINAL INTERIM REPORT 17.4.2023
+I've added all missing parts of the program as well as written the final document. All of this has taken
+me about two weeks altogether.
